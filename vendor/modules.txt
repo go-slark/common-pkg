@@ -43,7 +43,6 @@ github.com/modern-go/reflect2
 # github.com/nickxb/gin-http-logger v1.1.1-0.20191028062356-c63c682255f4
 github.com/nickxb/gin-http-logger
 # github.com/nickxb/pkg v0.6.1
-github.com/nickxb/pkg/xgin/xrender
 github.com/nickxb/pkg/xjson
 github.com/nickxb/pkg/xqueue
 github.com/nickxb/pkg/xruntime

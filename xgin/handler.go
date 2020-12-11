@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nickxb/pkg/xgin/xrender"
+	"github.com/smallfish-root/common-pkg/xgin/xrender"
 )
 
 type DecoratorHandlerFunc func(*gin.Context) xrender.Render
