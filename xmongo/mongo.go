@@ -108,3 +108,15 @@ func WithColl(alias string, dbName string, collName string, fn func(coll *MongoC
 	defer coll.Close()
 	return fn(coll)
 }
+
+func Close() {
+	xsync.WithLock(mongoSessionsLock, func() {
+		for _, s := range mongoSessions {
+			if s == nil {
+				continue
+			}
+
+			s.Close()
+		}
+	})
+}

@@ -111,3 +111,15 @@ func WithConn(poolAlias string, fn func(conn redis.Conn) error) error {
 	defer conn.Close()
 	return fn(conn)
 }
+
+func Close() {
+	xsync.WithLock(redisPoolLock, func() {
+		for _, p := range redisPools {
+			if p == nil {
+				continue
+			}
+
+			_ = p.Close()
+		}
+	})
+}
