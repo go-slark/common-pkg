@@ -1,4 +1,4 @@
-module github.com/blackroot/common-pkg
+module github.com/smallfish-root/common-pkg
 
 go 1.12
 
