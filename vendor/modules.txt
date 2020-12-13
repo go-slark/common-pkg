@@ -1,3 +1,13 @@
+# github.com/DataDog/zstd v1.4.5
+github.com/DataDog/zstd
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/eapache/go-resiliency v1.2.0
+github.com/eapache/go-resiliency/breaker
+# github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21
+github.com/eapache/go-xerial-snappy
+# github.com/eapache/queue v1.1.0
+github.com/eapache/queue
 # github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3
 github.com/gin-contrib/sse
 # github.com/gin-gonic/gin v1.4.0
@@ -20,6 +30,12 @@ github.com/go-playground/universal-translator
 github.com/go-sql-driver/mysql
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
+# github.com/golang/snappy v0.0.2
+github.com/golang/snappy
 # github.com/gomodule/redigo v2.0.0+incompatible
 github.com/gomodule/redigo/internal
 github.com/gomodule/redigo/redis
@@ -47,14 +63,63 @@ github.com/nickxb/pkg/xjson
 github.com/nickxb/pkg/xqueue
 github.com/nickxb/pkg/xruntime
 github.com/nickxb/pkg/xsync
+# github.com/pierrec/lz4 v2.6.0+incompatible
+github.com/pierrec/lz4
+github.com/pierrec/lz4/internal/xxh32
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
+# github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0
+github.com/rcrowley/go-metrics
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/ugorji/go v1.1.4
 github.com/ugorji/go/codec
+# golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+golang.org/x/net/context
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
+golang.org/x/net/internal/timeseries
+golang.org/x/net/trace
 # golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
 golang.org/x/sys/unix
+# golang.org/x/text v0.3.0
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v1.16.0
+google.golang.org/grpc
+google.golang.org/grpc/balancer
+google.golang.org/grpc/balancer/base
+google.golang.org/grpc/balancer/roundrobin
+google.golang.org/grpc/codes
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/credentials
+google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal
+google.golang.org/grpc/internal/backoff
+google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/envconfig
+google.golang.org/grpc/internal/grpcrand
+google.golang.org/grpc/internal/transport
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/metadata
+google.golang.org/grpc/naming
+google.golang.org/grpc/peer
+google.golang.org/grpc/resolver
+google.golang.org/grpc/resolver/dns
+google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/stats
+google.golang.org/grpc/status
+google.golang.org/grpc/tap
+# gopkg.in/Shopify/sarama.v1 v1.20.1
+gopkg.in/Shopify/sarama.v1
 # gopkg.in/go-playground/validator.v8 v8.18.2
 gopkg.in/go-playground/validator.v8
 # gopkg.in/go-playground/validator.v9 v9.28.0
