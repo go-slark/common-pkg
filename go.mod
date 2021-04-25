@@ -18,9 +18,10 @@ require (
 	github.com/nickxb/gin-http-logger v1.1.1-0.20191028062356-c63c682255f4
 	github.com/nickxb/pkg v0.6.1
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/sirupsen/logrus v1.4.2
+	go.mongodb.org/mongo-driver v1.5.1
 	google.golang.org/grpc v1.16.0
 	gopkg.in/Shopify/sarama.v1 v1.20.1
 	gopkg.in/go-playground/validator.v9 v9.28.0
