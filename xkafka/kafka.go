@@ -3,9 +3,9 @@ package xkafka
 import (
 	"context"
 	"encoding/json"
+	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	sarama "gopkg.in/Shopify/sarama.v1"
 	"time"
 )
 
@@ -106,7 +106,7 @@ func SendMsgByAsyncProducer(c *ProducerConfig, key string, msg interface{}) (sar
 }
 
 type Config struct {
-	Hosts       []string      `mapstructure:"hosts"`//broker
+	Hosts       []string      `mapstructure:"hosts"` //broker
 	Topics      []string      `mapstructure:"topics"`
 	GroupID     string        `mapstructure:"group_id"`
 	ClientID    string        `mapstructure:"client_id"`
@@ -150,7 +150,7 @@ func Consume(ctx context.Context, conf *Config, handler sarama.ConsumerGroupHand
 		}
 	}()
 
-	err := consumer.Consume(ctx, conf.Topics, handler)//handler是消费消息的具体处理
+	err := consumer.Consume(ctx, conf.Topics, handler) //handler是消费消息的具体处理
 	if err != nil {
 		logrus.Errorf("Kafka consume error, err:%+v", err)
 		return consumer, errors.WithStack(err)
@@ -178,4 +178,4 @@ func (ch ConsumerHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim s
 	}
 	return nil
 }
- */
+*/
