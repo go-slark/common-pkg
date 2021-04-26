@@ -5,12 +5,14 @@ import (
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 	"time"
 )
 
 var (
 	client  *mongo.Client
 	mongoDB *mongo.Database
+	mongoLock = &sync.RWMutex{}
 )
 
 type MongoConf struct {
@@ -24,6 +26,8 @@ func InitMongoDB(conf *MongoConf) error {
 		return errors.New("conf param invalid")
 	}
 
+	mongoLock.Lock()
+	defer mongoLock.Unlock()
 	client, err := mongo.NewClient(options.Client().ApplyURI(conf.Url))
 	if err != nil {
 		return errors.WithStack(err)
@@ -45,6 +49,8 @@ type MongoCollection struct {
 }
 
 func NewMongoCollection(coll string) *MongoCollection {
+	mongoLock.RLock()
+	defer mongoLock.RUnlock()
 	return &MongoCollection{mongoDB.Collection(coll)}
 }
 
@@ -53,5 +59,7 @@ func CloseMongo() error {
 		return errors.New("mongo client invalid")
 	}
 
+	mongoLock.RLock()
+	defer mongoLock.RUnlock()
 	return client.Disconnect(context.TODO())
 }

@@ -8,9 +8,13 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"sync"
 )
 
-var newMysqlPools = make(map[string]*gorm.DB)
+var (
+	newMysqlPools = make(map[string]*gorm.DB)
+	mysqlLock     = &sync.RWMutex{}
+)
 
 func InitMySql(configs []*MySqlPoolConfig) error {
 	for _, c := range configs {
@@ -21,7 +25,7 @@ func InitMySql(configs []*MySqlPoolConfig) error {
 		if err != nil {
 			return errors.New(fmt.Sprintf("mysql pool %s error %v", xjson.SafeMarshal(c), err))
 		}
-		xsync.WithLock(mysqlPoolLock, func() {
+		xsync.WithLock(mysqlLock, func() {
 			newMysqlPools[c.Alias] = p
 		})
 	}
@@ -51,13 +55,13 @@ func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
 }
 
 func GetMySqlConn(alias string) *gorm.DB {
-	mysqlPoolLock.RLock()
-	defer mysqlPoolLock.RUnlock()
+	mysqlLock.RLock()
+	defer mysqlLock.RUnlock()
 	return newMysqlPools[alias]
 }
 
 func CloseMysql() {
-	xsync.WithLock(mysqlPoolLock, func() {
+	xsync.WithLock(mysqlLock, func() {
 		for _, db := range newMysqlPools {
 			if db == nil {
 				continue
