@@ -2,8 +2,8 @@ package xmysql
 
 import (
 	"fmt"
+	"github.com/nickxb/pkg/xjson"
 	"github.com/pkg/errors"
-	"github.com/smallfish-root/common-pkg/xjson"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
