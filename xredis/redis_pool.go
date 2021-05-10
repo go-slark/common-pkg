@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nickxb/pkg/xjson"
-	"github.com/nickxb/pkg/xsync"
 	"sync"
 	"time"
 )
 
 var (
-	redisPoolLock = new(sync.RWMutex)
-	redisPools    = make(map[string]*redis.Pool)
+	redisPools = make(map[string]*redis.Pool)
+	once       sync.Once
 )
 
 type RedisPoolConfig struct {
@@ -29,23 +28,23 @@ type RedisPoolConfig struct {
 }
 
 func InitRedisPool(configs []*RedisPoolConfig) error {
-	for _, c := range configs {
-		if _, ok := redisPools[c.Alias]; ok {
-			return errors.New("duplicate redis pool: " + c.Alias)
-		}
-		p, err := createRedisPool(c)
-		if err != nil {
-			return errors.New(fmt.Sprintf("redis pool %s error %v", xjson.SafeMarshal(c), err))
-		}
-		xsync.WithLock(redisPoolLock, func() {
+	once.Do(func() {
+		for _, c := range configs {
+			if _, ok := redisPools[c.Alias]; ok {
+				panic(errors.New("duplicate redis pool: " + c.Alias))
+			}
+			p, err := createRedisPool(c)
+			if err != nil {
+				panic(errors.New(fmt.Sprintf("redis pool %s error %v", xjson.SafeMarshal(c), err)))
+			}
 			redisPools[c.Alias] = p
-		})
-	}
+		}
+	})
+
 	return nil
 }
 
 func createRedisPool(c *RedisPoolConfig) (*redis.Pool, error) {
-
 	p := &redis.Pool{
 		MaxIdle:     c.MaxIdle,
 		IdleTimeout: time.Duration(c.IdleTimeout) * time.Second,
@@ -101,8 +100,6 @@ func createRedisPool(c *RedisPoolConfig) (*redis.Pool, error) {
 }
 
 func GetRedisPool(alias string) *redis.Pool {
-	redisPoolLock.RLock()
-	defer redisPoolLock.RUnlock()
 	return redisPools[alias]
 }
 
@@ -113,13 +110,11 @@ func WithConn(poolAlias string, fn func(conn redis.Conn) error) error {
 }
 
 func Close() {
-	xsync.WithLock(redisPoolLock, func() {
-		for _, p := range redisPools {
-			if p == nil {
-				continue
-			}
-
-			_ = p.Close()
+	for _, p := range redisPools {
+		if p == nil {
+			continue
 		}
-	})
+
+		_ = p.Close()
+	}
 }
