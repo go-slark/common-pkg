@@ -60,6 +60,10 @@ func NewMongoCollection(coll string) *mongo.Collection {
 	return mongoDB.Collection(coll)
 }
 
+func GetMongoDB() *mongo.Database {
+	return mongoDB
+}
+
 func CloseMongo() error {
 	if client == nil {
 		return errors.New("mongo client invalid")
