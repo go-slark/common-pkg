@@ -17,7 +17,7 @@ var (
 
 type MongoConf struct {
 	Url         string `json:"url"`
-	DateBase    string `json:"date_base"`
+	DateBase    string `json:"data_base"`
 	Timeout     int    `json:"timeout"`
 	MaxPoolSize uint64 `json:"max_pool_size"`
 	MinPoolSize uint64 `json:"min_pool_size"`
