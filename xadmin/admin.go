@@ -10,7 +10,6 @@ var gServer *http.Server
 
 func StartAdminAt(addr string) {
 	if addr == "" {
-		fmt.Printf("invalid admin addr(%s)\n", addr)
 		return
 	}
 
