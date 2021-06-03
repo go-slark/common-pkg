@@ -40,13 +40,26 @@ func ValidateMobile(fl validator.FieldLevel) bool {
 func ValidateIdCard(fl validator.FieldLevel) bool {
 	regularExp := "^(\\d{17})([0-9]|X|x)$"
 	regExp := regexp.MustCompile(regularExp)
-	mobile, ok := fl.Field().Interface().(string)
+	idCard, ok := fl.Field().Interface().(string)
 	if !ok {
 		return false
 	}
 
-	if regExp.MatchString(mobile) {
+	if regExp.MatchString(idCard) {
 		return true
 	}
 	return false
+}
+
+func ValidateStrLen(fl validator.FieldLevel) bool {
+	str, ok := fl.Field().Interface().(string)
+	if !ok {
+		return false
+	}
+	//20个中文字符
+	if len(str) > 60 {
+		return false
+	}
+
+	return true
 }
