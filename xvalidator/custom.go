@@ -12,7 +12,7 @@ func RegisterCustomValidator() {
 	v.RegisterValidation("is-objectid", ValidateObjectId)
 	v.RegisterValidation("ValidateMobile", ValidateMobile)
 	v.RegisterValidation("ValidateIdCard", ValidateIdCard)
-	v.RegisterValidation("ValidateStrLen", ValidateIdCard)
+	v.RegisterValidation("ValidateStrLen", ValidateStrLen)
 }
 
 func ValidateObjectId(fl validator.FieldLevel) bool {
