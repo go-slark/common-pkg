@@ -1,4 +1,4 @@
-package xmongo
+package globalsign
 
 import (
 	"sync"

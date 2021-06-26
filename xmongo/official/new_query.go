@@ -1,8 +1,8 @@
-package xmongo
+package official
 
 import (
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -18,29 +18,29 @@ func SetUpdateTime(update bson.M) bson.M {
 }
 
 type QueryOptions struct {
-	Skip     int
-	Limit    int
+	Skip     int64
+	Limit    int64
 	Sort     []string
 	Selector bson.M
 }
 
-func ApplyQueryOpts(query *mgo.Query, opts ...QueryOpt) *mgo.Query {
+func ApplyQueryOpts(query *options.FindOptions, opts ...QueryOpt) *options.FindOptions {
 	qo := &QueryOptions{}
 	for _, opt := range opts {
 		opt(qo)
 	}
 	if len(qo.Sort) != 0 {
-		query = query.Sort(qo.Sort...)
+		query = query.SetSort(qo.Sort)
 	}
 	if qo.Skip != 0 {
-		query = query.Skip(qo.Skip)
+		query = query.SetSkip(qo.Skip)
 	}
 	if qo.Limit != 0 {
-		query = query.Limit(qo.Limit)
+		query = query.SetLimit(qo.Limit)
 	}
 
 	if qo.Selector != nil {
-		query = query.Select(qo.Selector)
+		query = query.SetProjection(qo.Selector)
 	}
 
 	return query
@@ -48,13 +48,13 @@ func ApplyQueryOpts(query *mgo.Query, opts ...QueryOpt) *mgo.Query {
 
 type QueryOpt func(*QueryOptions)
 
-func Skip(skip int) QueryOpt {
+func Skip(skip int64) QueryOpt {
 	return func(opts *QueryOptions) {
 		opts.Skip = skip
 	}
 }
 
-func Limit(limit int) QueryOpt {
+func Limit(limit int64) QueryOpt {
 	return func(opts *QueryOptions) {
 		opts.Limit = limit
 	}
