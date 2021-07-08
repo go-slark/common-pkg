@@ -8,6 +8,7 @@ import (
 	"github.com/nickxb/pkg/xsync"
 	"github.com/pkg/errors"
 	"sync"
+	"time"
 )
 
 var (
@@ -16,10 +17,12 @@ var (
 )
 
 type MySqlPoolConfig struct {
-	Alias          string `json:"alias"`
-	Address        string `json:"address"`
-	MaxIdleConn    int `json:"max_idle_conn"`
-	MaxOpenConn    int `json:"max_open_conn"`
+	Alias       string        `json:"alias"`
+	Address     string        `json:"address"`
+	MaxIdleConn int           `json:"max_idle_conn"`
+	MaxOpenConn int           `json:"max_open_conn"`
+	MaxLifeTime time.Duration `json:"max_life_time"`
+	MaxIdleTime time.Duration `json:"max_idle_time"`
 }
 
 func InitMySqlPool(configs []*MySqlPoolConfig) error {
@@ -46,6 +49,12 @@ func createMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
 
 	db.DB().SetMaxIdleConns(c.MaxIdleConn)
 	db.DB().SetMaxOpenConns(c.MaxOpenConn)
+	if c.MaxLifeTime != 0 {
+		db.DB().SetConnMaxLifetime(c.MaxLifeTime * time.Second)
+	}
+	if c.MaxIdleTime != 0 {
+		db.DB().SetConnMaxIdleTime(c.MaxIdleTime * time.Second)
+	}
 	db.SingularTable(true)
 
 	if err = db.DB().Ping(); err != nil {
