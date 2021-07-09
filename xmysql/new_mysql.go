@@ -15,7 +15,7 @@ var (
 	once          sync.Once
 )
 
-func InitMySql(configs []*MySqlPoolConfig) error {
+func InitMySql(configs []*MySqlPoolConfig) {
 	once.Do(func() {
 		for _, c := range configs {
 			if _, ok := mysqlPools[c.Alias]; ok {
@@ -28,8 +28,6 @@ func InitMySql(configs []*MySqlPoolConfig) error {
 			newMysqlPools[c.Alias] = p
 		}
 	})
-
-	return nil
 }
 
 func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
@@ -51,6 +49,9 @@ func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	if db == nil {
+		return nil, errors.New("db is nil")
+	}
 	return db, nil
 }
 
