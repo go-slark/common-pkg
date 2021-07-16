@@ -24,7 +24,8 @@ type QueryOptions struct {
 	Selector bson.M
 }
 
-func ApplyQueryOpts(query *options.FindOptions, opts ...QueryOpt) *options.FindOptions {
+func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
+	query := &options.FindOptions{}
 	qo := &QueryOptions{}
 	for _, opt := range opts {
 		opt(qo)
