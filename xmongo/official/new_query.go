@@ -20,8 +20,8 @@ func SetUpdateTime(update bson.M) bson.M {
 type QueryOptions struct {
 	Skip     int64
 	Limit    int64
-	Sort     []string
-	Selector bson.M
+	Sort     bson.M
+	//Selector bson.M
 }
 
 func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
@@ -30,7 +30,7 @@ func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
 	for _, opt := range opts {
 		opt(qo)
 	}
-	if len(qo.Sort) != 0 {
+	if qo.Sort != nil {
 		query = query.SetSort(qo.Sort)
 	}
 	if qo.Skip != 0 {
@@ -40,9 +40,9 @@ func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
 		query = query.SetLimit(qo.Limit)
 	}
 
-	if qo.Selector != nil {
-		query = query.SetProjection(qo.Selector)
-	}
+	//if qo.Selector != nil {
+	//	query = query.SetProjection(qo.Selector)
+	//}
 
 	return query
 }
