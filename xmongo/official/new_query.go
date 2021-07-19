@@ -18,9 +18,9 @@ func SetUpdateTime(update bson.M) bson.M {
 }
 
 type QueryOptions struct {
-	Skip     int64
-	Limit    int64
-	Sort     bson.M
+	Skip  int64
+	Limit int64
+	Sort  bson.M
 	//Selector bson.M
 }
 
@@ -61,14 +61,14 @@ func Limit(limit int64) QueryOpt {
 	}
 }
 
-func Sort(fields ...string) QueryOpt {
+func Sort(sort bson.M) QueryOpt {
 	return func(opts *QueryOptions) {
-		opts.Sort = append(opts.Sort, fields...)
+		opts.Sort = sort
 	}
 }
 
-func Select(selector bson.M) QueryOpt {
-	return func(opts *QueryOptions) {
-		opts.Selector = selector
-	}
-}
+//func Select(selector bson.M) QueryOpt {
+//	return func(opts *QueryOptions) {
+//		opts.Selector = selector
+//	}
+//}
