@@ -18,11 +18,15 @@ func SetUpdateTime(update bson.M) bson.M {
 }
 
 type QueryOptions struct {
-	Skip  int64
-	Limit int64
-	Sort  bson.M
-	//Selector bson.M
+	Skip     int64
+	Limit    int64
+	Sort     bson.M
+	Selector bson.M
 }
+
+/*
+QueryOptions.Selector : bson.M{"_id": false/true} : false不返回该文档字段 / true返回该文档字段
+*/
 
 func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
 	query := &options.FindOptions{}
@@ -40,9 +44,9 @@ func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
 		query = query.SetLimit(qo.Limit)
 	}
 
-	//if qo.Selector != nil {
-	//	query = query.SetProjection(qo.Selector)
-	//}
+	if qo.Selector != nil {
+		query = query.SetProjection(qo.Selector)
+	}
 
 	return query
 }
@@ -67,8 +71,8 @@ func Sort(sort bson.M) QueryOpt {
 	}
 }
 
-//func Select(selector bson.M) QueryOpt {
-//	return func(opts *QueryOptions) {
-//		opts.Selector = selector
-//	}
-//}
+func Select(selector bson.M) QueryOpt {
+	return func(opts *QueryOptions) {
+		opts.Selector = selector
+	}
+}
