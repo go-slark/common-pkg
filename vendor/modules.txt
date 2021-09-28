@@ -107,7 +107,8 @@ github.com/jinzhu/now
 github.com/josharian/intern
 # github.com/json-iterator/go v1.1.6
 github.com/json-iterator/go
-# github.com/klauspost/compress v1.12.2
+# github.com/klauspost/compress v1.13.4
+github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/zstd
@@ -116,11 +117,10 @@ github.com/klauspost/compress/zstd/internal/xxhash
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/leodido/go-urn v1.1.0
 github.com/leodido/go-urn
-# github.com/looplab/eventhorizon v0.14.5
+# github.com/looplab/eventhorizon v0.14.7
 github.com/looplab/eventhorizon
+github.com/looplab/eventhorizon/aggregatestore/events
 github.com/looplab/eventhorizon/codec/json
-github.com/looplab/eventhorizon/commandhandler/bus
-github.com/looplab/eventhorizon/eventbus/kafka
 github.com/looplab/eventhorizon/uuid
 # github.com/mailru/easyjson v0.7.7
 github.com/mailru/easyjson
@@ -182,6 +182,10 @@ github.com/segmentio/kafka-go/protocol/saslhandshake
 github.com/segmentio/kafka-go/sasl
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
+# github.com/smallfish-root/eventhorizon v1.0.1
+github.com/smallfish-root/eventhorizon
+github.com/smallfish-root/eventhorizon/commandhandler/bus
+github.com/smallfish-root/eventhorizon/eventbus/kafka
 # github.com/ugorji/go v1.1.4
 github.com/ugorji/go/codec
 # github.com/xdg-go/pbkdf2 v1.0.0
