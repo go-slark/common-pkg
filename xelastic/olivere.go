@@ -38,9 +38,33 @@ func InitElastic(conf *ElasticConf) {
 			panic(errors.WithStack(err))
 		}
 
-		_, _, err = client.Ping(conf.Url[0]).Do(context.TODO())
-		if err != nil {
-			panic(errors.WithStack(err))
+		for _, url := range conf.Url {
+			_, _, err = client.Ping(url).Do(context.TODO())
+			if err != nil {
+				panic(errors.WithStack(err))
+			}
 		}
 	})
+}
+
+func Stop() {
+	client.Stop()
+}
+
+func Index(index, typ string, doc interface{}) (*elastic.IndexResponse, error) {
+	rsp, err := client.Index().Index(index).Type(typ).BodyJson(doc).Do(context.TODO())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return rsp, nil
+}
+
+func Get(index, typ string) (*elastic.GetResult, error) {
+	result, err := client.Get().Index(index).Type(typ).Do(context.TODO())
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return result, nil
 }
