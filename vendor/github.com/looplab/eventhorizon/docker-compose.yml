@@ -1,0 +1,92 @@
+version: "3.4"
+
+volumes:
+  mongodb:
+
+services:
+  eventhorizon-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      - mongodb
+      - gpubsub
+      - kafka
+      - redis
+      - nats
+    environment:
+      MONGODB_ADDR: mongodb:27017
+      PUBSUB_EMULATOR_HOST: gpubsub:8793
+      KAFKA_ADDR: kafka:9092
+      REDIS_ADDR: redis:6379
+      NATS_ADDR: nats:4222
+    command: [-c, make test test_integration]
+
+  # MongoDB replica set setup.
+  mongodb:
+    image: mongo:4.4
+    restart: on-failure
+    depends_on:
+      - mongodb-rs
+    networks:
+      default:
+    entrypoint: [bash, /scripts/mongodb-rs-setup.sh]
+    volumes:
+      - ./scripts/mongodb-rs-setup.sh:/scripts/mongodb-rs-setup.sh
+
+  mongodb-rs:
+    image: mongo:4.4
+    restart: always
+    ports:
+      - 27017:27017
+    command: [--replSet, rs0, --bind_ip_all]
+    healthcheck:
+      test: test $$(echo "rs.status().ok" | mongo --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+    volumes:
+      - mongodb:/data/db
+
+  gpubsub:
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:355.0.0-emulators
+    ports:
+      - 8793:8793
+    entrypoint:
+      [gcloud, beta, emulators, pubsub, start, --host-port=0.0.0.0:8793]
+
+  zookeeper:
+    image: bitnami/zookeeper:3.6.2
+    ports:
+      - 2181:2181
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+
+  kafka:
+    image: wurstmeister/kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9093:9093
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 5
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  redis:
+    image: redis:6.2-alpine3.13
+    ports:
+      - 6379:6379
+    entrypoint: [redis-server, --appendonly yes]
+
+  nats:
+    image: nats:2.4-alpine3.14
+    ports:
+      - 4222:4222
+    command: [-js]
