@@ -8,10 +8,10 @@ import (
 )
 
 type AppConf struct {
-	BucketSize        int    `json:"bucket_size"`
-	BucketName        string `json:"bucket_name"`         // zset key
-	QueueName         string `json:"queue_name"`          // ready queue key
-	QueueBlockTimeout int    `json:"queue_block_timeout"` // blpop time out: s
+	BucketSize        int    `mapstructure:"bucket_size" json:"bucket_size"`
+	BucketName        string `mapstructure:"bucket_name" json:"bucket_name"`                 // zset key
+	QueueName         string `mapstructure:"queue_name" json:"queue_name"`                   // ready queue key
+	QueueBlockTimeout int    `mapstructure:"queue_block_timeout" json:"queue_block_timeout"` // blpop time out: s
 }
 
 type DelayQueue struct {
@@ -19,8 +19,8 @@ type DelayQueue struct {
 	timers         []*time.Ticker
 	bucketNameChan <-chan string
 
-	AppConf
-	xredis.RedisClientConfig
+	AppConf                  `mapstructure:"app_conf" json:"app_conf"`
+	xredis.RedisClientConfig `mapstructure:"redis_conf" json:"redis_conf"`
 }
 
 func buildBucket(bucketName string, index int) string {
