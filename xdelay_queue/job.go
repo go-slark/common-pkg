@@ -7,11 +7,11 @@ import (
 )
 
 type Job struct {
-	Topic string      `json:"topic"`
-	Id    string      `json:"id"`
-	Delay int64       `json:"delay"`
-	TTR   int64       `json:"ttr"`
-	Body  interface{} `json:"body"`
+	Topic string `json:"topic"`
+	Id    string `json:"id"`
+	Delay int64  `json:"delay"`
+	TTR   int64  `json:"ttr"`
+	Body  []byte `json:"body"`
 }
 
 func (dq *DelayQueue) getJob(key string) (*Job, error) {
