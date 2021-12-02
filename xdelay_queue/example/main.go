@@ -41,7 +41,7 @@ func main() {
 				Id:    uuid.NewString(),
 				Delay: time.Now().Unix() + 20,
 				TTR:   3, // time to retry
-				Body:  "test delay queue",
+				Body:  []byte("test delay queue"),
 			})
 			if err != nil {
 				fmt.Println("^^^^ err:", err)
@@ -52,7 +52,7 @@ func main() {
 				Id:    uuid.NewString(),
 				Delay: time.Now().Unix() + 10,
 				TTR:   3,
-				Body:  "test delay queue-----",
+				Body:  []byte("test delay queue-----"),
 			})
 			if err != nil {
 				fmt.Println("**** err:", err)

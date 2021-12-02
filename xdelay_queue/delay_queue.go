@@ -57,11 +57,8 @@ func (dq *DelayQueue) AddJob(job *Job) error {
 
 	return redis.NewScript(`
         redis.call("SET", KEYS[1], ARGV[1])
-        redis.call("ZADD", KEYS[2], ARGV[2])
-    `).Run(dq.Client, []string{job.Id, <- dq.bucketNameChan}, value, redis.Z{
-		Score:  float64(job.Delay),
-		Member: job.Id,
-	}).Err()
+        redis.call("ZADD", KEYS[2], ARGV[2], ARGV[3])
+    `).Run(dq.Client, []string{job.Id, <- dq.bucketNameChan}, value, float64(job.Delay), job.Id).Err()
 }
 
 func (dq *DelayQueue) GetJob(topics []string) (*Job, error) {
@@ -158,11 +155,8 @@ func (dq *DelayQueue) handleTicker(t time.Time, bucketName string) {
 			//_ = dq.addJobToBucketZ(job.Delay, bucketZ.jobId)
 			_ = redis.NewScript(`
                 redis.call("ZREM", KEYS[1], ARGV[1])
-                redis.call("ZADD", KEYS[2], ARGV[2])
-            `).Run(dq.Client, []string{bucketName, <-dq.bucketNameChan}, bucketZ.jobId, redis.Z{
-				Score:  float64(job.Delay),
-				Member: bucketZ.jobId,
-			}).Err()
+                redis.call("ZADD", KEYS[2], ARGV[2], ARGV[3])
+            `).Run(dq.Client, []string{bucketName, <-dq.bucketNameChan}, bucketZ.jobId, float64(job.Delay), bucketZ.jobId).Err()
 			continue
 		}
 
