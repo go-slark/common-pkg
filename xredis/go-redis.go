@@ -49,6 +49,23 @@ func InitRedisClients(configs []*RedisClientConfig) error {
 	return nil
 }
 
+func AppendRedisClients(configs []*RedisClientConfig) {
+	if len(redisClients) == 0 {
+		_ = InitRedisClients(configs)
+	}
+
+	for _, c := range configs {
+		if _, ok := redisClients[c.Alias]; ok {
+			continue
+		}
+		client, err := createRedisClient(c)
+		if err != nil {
+			panic(errors.New(fmt.Sprintf("redis client %s error %v", xjson.SafeMarshal(c), err)))
+		}
+		redisClients[c.Alias] = client
+	}
+}
+
 func createRedisClient(c *RedisClientConfig) (*redis.Client, error) {
 	options := &redis.Options{
 		Network:     "tcp",
