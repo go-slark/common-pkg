@@ -21,11 +21,13 @@ type QueryOptions struct {
 	Skip     int64
 	Limit    int64
 	Sort     bson.M
+	SortD    bson.D
 	Selector bson.M
 }
 
 /*
-QueryOptions.Selector : bson.M{"_id": false/true} : false不返回该文档字段 / true返回该文档字段
+    QueryOptions.Selector : bson.M{"_id": false/true} : false不返回该文档字段 / true返回该文档字段
+    sortD [{"_id": 1}, {"name": 1}] : 返回的是有序数据，按照_id->name的顺序返回， sort sortD字段只能选择一个
 */
 
 func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
@@ -36,6 +38,9 @@ func ApplyQueryOpts(opts ...QueryOpt) *options.FindOptions {
 	}
 	if qo.Sort != nil {
 		query = query.SetSort(qo.Sort)
+	}
+	if len(qo.SortD) != 0 {
+		query = query.SetSort(qo.SortD)
 	}
 	if qo.Skip != 0 {
 		query = query.SetSkip(qo.Skip)
@@ -68,6 +73,12 @@ func Limit(limit int64) QueryOpt {
 func Sort(sort bson.M) QueryOpt {
 	return func(opts *QueryOptions) {
 		opts.Sort = sort
+	}
+}
+
+func SortD(sortD bson.D) QueryOpt {
+	return func(opts *QueryOptions) {
+		opts.SortD = sortD
 	}
 }
 
