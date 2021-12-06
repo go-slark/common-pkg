@@ -18,6 +18,7 @@ func (dq *DelayQueue) addJobToBucketZ(timestamp int64, jobId string) error {
 }
 
 func (dq *DelayQueue) getJobFromBucketZ(key string) (*BucketZ, error) {
+	//zrangebyscore zrangebyscorewithscores
 	result, err := dq.ZRangeWithScores(key, 0, 0).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {

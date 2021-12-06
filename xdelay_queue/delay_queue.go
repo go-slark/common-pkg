@@ -50,6 +50,7 @@ func (dq *DelayQueue) AddJob(job *Job) error {
 		return errors.New("invalid job")
 	}
 
+	job.Delay = job.Delay + time.Now().Unix()
 	value, err := json.Marshal(job)
 	if err != nil {
 		return errors.WithStack(err)
