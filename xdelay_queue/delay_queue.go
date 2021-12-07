@@ -133,11 +133,11 @@ func (dq *DelayQueue) handleTicker(t time.Time, bucketName string) {
 	for {
 		bucketZ, err := dq.getJobFromBucketZ(bucketName)
 		if err != nil {
-			continue
+			return
 		}
 
 		if bucketZ == nil {
-			continue
+			return
 		}
 
 		job, err := dq.getJob(bucketZ.jobId)
