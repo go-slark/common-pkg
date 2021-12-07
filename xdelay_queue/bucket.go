@@ -1,8 +1,9 @@
 package xdelay_queue
 
 import (
-	"errors"
+	"fmt"
 	"github.com/go-redis/redis"
+	"time"
 )
 
 type BucketZ struct {
@@ -18,12 +19,13 @@ func (dq *DelayQueue) addJobToBucketZ(timestamp int64, jobId string) error {
 }
 
 func (dq *DelayQueue) getJobFromBucketZ(key string) (*BucketZ, error) {
-	//zrangebyscore zrangebyscorewithscores
-	result, err := dq.ZRangeWithScores(key, 0, 0).Result()
+	//result, err := dq.ZRangeWithScores(key, 0, 0).Result()
+	result, err := dq.ZRangeByScore(key, redis.ZRangeBy{
+		Max:    fmt.Sprintf("%d", time.Now().Unix()),
+		Offset: 0,
+		Count:  1,
+	}).Result()
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, nil
-		}
 		return nil, err
 	}
 	if len(result) == 0 {
@@ -31,9 +33,8 @@ func (dq *DelayQueue) getJobFromBucketZ(key string) (*BucketZ, error) {
 	}
 
 	bz := &BucketZ{
-		timeScore: result[0].Score,
+		jobId: result[0],
 	}
-	bz.jobId = result[0].Member.(string)
 	return bz, nil
 }
 

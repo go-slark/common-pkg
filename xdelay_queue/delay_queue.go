@@ -50,7 +50,6 @@ func (dq *DelayQueue) AddJob(job *Job) error {
 		return errors.New("invalid job")
 	}
 
-	job.Delay = job.Delay + time.Now().Unix()
 	value, err := json.Marshal(job)
 	if err != nil {
 		return errors.WithStack(err)
@@ -59,7 +58,7 @@ func (dq *DelayQueue) AddJob(job *Job) error {
 	err = redis.NewScript(`
         redis.call("SET", KEYS[1], ARGV[1])
         redis.call("ZADD", KEYS[2], ARGV[2], ARGV[3])
-    `).Run(dq.Client, []string{job.Id, <- dq.bucketNameChan}, value, float64(job.Delay), job.Id).Err()
+    `).Run(dq.Client, []string{job.Id, <-dq.bucketNameChan}, value, float64(job.Delay), job.Id).Err()
 	if err == nil || errors.Is(err, redis.Nil) {
 		return nil
 	}
@@ -134,15 +133,11 @@ func (dq *DelayQueue) handleTicker(t time.Time, bucketName string) {
 	for {
 		bucketZ, err := dq.getJobFromBucketZ(bucketName)
 		if err != nil {
-			return
+			continue
 		}
 
 		if bucketZ == nil {
-			return
-		}
-
-		if int64(bucketZ.timeScore) > t.Unix() {
-			return
+			continue
 		}
 
 		job, err := dq.getJob(bucketZ.jobId)
