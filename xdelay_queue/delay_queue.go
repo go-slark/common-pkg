@@ -80,9 +80,12 @@ func (dq *DelayQueue) GetJob(topics []string) (*Job, error) {
 		return nil, nil
 	}
 
-	timestamp := time.Now().Unix() + job.TTR
-	err = dq.addJobToBucketZ(timestamp, job.Id)
-	return job, err
+	job.DoneTimes++
+	if job.Times <= 0 || job.DoneTimes < job.Times {
+		timestamp := time.Now().Unix() + job.TTR
+		_ = dq.addJobToBucketZ(timestamp, job.Id)
+	}
+	return job, nil
 }
 
 func (dq *DelayQueue) DeleteJob(jobId string) error {
