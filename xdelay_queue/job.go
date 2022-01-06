@@ -6,14 +6,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+type JobCore struct {
+	Topic string `json:"topic"`
+	Id    string `json:"id"`
+	Delay int64  `json:"delay"`
+	TTR   int64  `json:"ttr"`
+	Times int64  `json:"times"`
+	Body  []byte `json:"body"`
+}
+
 type Job struct {
-	Topic     string `json:"topic"`
-	Id        string `json:"id"`
-	Delay     int64  `json:"delay"`
-	TTR       int64  `json:"ttr"`
-	Times     int64  `json:"times"`
-	DoneTimes int64  `json:"done_times"`
-	Body      []byte `json:"body"`
+	*JobCore
+	DoneTimes int64 `json:"done_times"`
 }
 
 func (dq *DelayQueue) getJob(key string) (*Job, error) {

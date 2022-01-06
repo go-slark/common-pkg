@@ -45,11 +45,19 @@ func GetDelayQueue(alias string) *DelayQueue {
 //}
 
 // AddJob transaction
-func (dq *DelayQueue) AddJob(job *Job) error {
-	if job.Id == "" || job.Topic == "" || job.Delay < 0 || job.TTR <= 0 {
+func (dq *DelayQueue) AddJob(jobCore *JobCore) error {
+	if jobCore == nil {
+		return errors.New("job param invalid")
+	}
+
+	if jobCore.Id == "" || jobCore.Topic == "" || jobCore.Delay < 0 || jobCore.TTR <= 0 {
 		return errors.New("invalid job")
 	}
 
+	job := &Job{
+		JobCore:   jobCore,
+		DoneTimes: 0,
+	}
 	value, err := json.Marshal(job)
 	if err != nil {
 		return errors.WithStack(err)
