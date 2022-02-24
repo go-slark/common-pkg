@@ -12,7 +12,8 @@ type BucketZ struct {
 }
 
 func (dq *DelayQueue) addJobToBucketZ(timestamp int64, jobId string) error {
-	return dq.ZAdd(<- dq.bucketNameChan, redis.Z{
+	jobBucket := <-dq.bucketNameChan
+	return dq.ZAdd(jobBucket.BucketName, redis.Z{
 		Score:  float64(timestamp),
 		Member: jobId,
 	}).Err()
