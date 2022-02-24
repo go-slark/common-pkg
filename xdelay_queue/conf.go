@@ -17,7 +17,7 @@ type AppConf struct {
 type DelayQueue struct {
 	*redis.Client
 	timers         []*time.Ticker
-	bucketNameChan <-chan string
+	bucketNameChan <-chan *JobBucket
 
 	AppConf                  `mapstructure:"app_conf" json:"app_conf"`
 	xredis.RedisClientConfig `mapstructure:"redis_conf" json:"redis_conf"`

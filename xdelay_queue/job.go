@@ -6,6 +6,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+type JobBucket struct {
+	BucketName  string `json:"bucket_name"`
+	BucketIndex int    `json:"bucket_index"`
+}
+
 type JobCore struct {
 	Topic string `json:"topic"`
 	Id    string `json:"id"`
@@ -17,6 +22,7 @@ type JobCore struct {
 
 type Job struct {
 	*JobCore
+	*JobBucket
 	DoneTimes int64 `json:"done_times"`
 }
 
