@@ -18,6 +18,7 @@ type JobCore struct {
 	TTR   int64  `json:"ttr"`
 	Times int64  `json:"times"`
 	Body  []byte `json:"body"`
+	Url   string `json:"url"`
 }
 
 type Job struct {

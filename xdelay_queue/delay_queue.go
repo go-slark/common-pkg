@@ -194,6 +194,7 @@ func (dq *DelayQueue) BatchAddJob(jobCores []*JobCore) error {
         for k, v in pairs(KEYS) do
             redis.call("SET", v, ARGV[k])
             redis.call("ZADD", ARGV[l+k], ARGV[2*l+k], ARGV[3*l+k])
+        end
     `
 	return redis.NewScript(src).Run(dq.Client, jobKey, argv...).Err()
 }
