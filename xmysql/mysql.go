@@ -23,6 +23,7 @@ type MySqlPoolConfig struct {
 	MaxOpenConn int           `json:"max_open_conn"`
 	MaxLifeTime time.Duration `json:"max_life_time"`
 	MaxIdleTime time.Duration `json:"max_idle_time"`
+	LogMode     int           `json:"log_mode"` //默认warn
 }
 
 func InitMySqlPool(configs []*MySqlPoolConfig) error {

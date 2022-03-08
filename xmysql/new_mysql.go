@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"sync"
 )
@@ -31,7 +32,11 @@ func InitMySql(configs []*MySqlPoolConfig) {
 }
 
 func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
-	db, err := gorm.Open(mysql.Open(c.Address), &gorm.Config{NamingStrategy: schema.NamingStrategy{SingularTable: true}})
+	cfg := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{SingularTable: true},
+		Logger:         logger.Default.LogMode(logger.LogLevel(c.LogMode)),
+	}
+	db, err := gorm.Open(mysql.Open(c.Address), cfg)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
