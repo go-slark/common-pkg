@@ -2,7 +2,6 @@ package xdelay_queue
 
 import (
 	"encoding/json"
-	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
 )
 
@@ -30,9 +29,9 @@ type Job struct {
 func (dq *DelayQueue) getJob(key string) (*Job, error) {
 	result, err := dq.Get(key).Bytes()
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, nil
-		}
+		//if errors.Is(err, redis.Nil) {
+		//	return nil, nil
+		//}
 		return nil, errors.WithStack(err)
 	}
 	if len(result) == 0 {
