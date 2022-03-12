@@ -2,6 +2,7 @@ package xdelay_queue
 
 import (
 	"encoding/json"
+	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
 )
 
@@ -56,6 +57,19 @@ func (dq *DelayQueue) addJob(key string, job *Job) error {
 	return dq.Set(key, value, 0).Err()
 }
 
-func (dq *DelayQueue) deleteJob(key string) error {
-	return dq.Del(key).Err()
+func (dq *DelayQueue) deleteJob(jobId string) error {
+	result, err := dq.Get(jobId).Bytes()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	job := &Job{}
+	err = json.Unmarshal(result, job)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return redis.NewScript(`
+        redis.call("DEL", KEYS[1])
+        redis.call("ZREM", KEYS[2], ARGV[1])
+    `).Run(dq.Client, []string{jobId, job.BucketName}, jobId).Err()
 }
