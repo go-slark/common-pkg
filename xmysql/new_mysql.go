@@ -48,6 +48,12 @@ func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
 
 	sqlDB.SetMaxIdleConns(c.MaxIdleConn)
 	sqlDB.SetMaxOpenConns(c.MaxOpenConn)
+	if c.MaxLifeTime != 0 {
+		sqlDB.SetConnMaxLifetime(c.MaxLifeTime)
+	}
+	if c.MaxIdleTime != 0 {
+		sqlDB.SetConnMaxIdleTime(c.MaxIdleTime)
+	}
 
 	if err = sqlDB.Ping(); err != nil {
 		_ = sqlDB.Close()
