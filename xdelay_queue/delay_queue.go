@@ -125,7 +125,9 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 	}
 	job, err := dq.getJob(jobCore.Id)
 	if err != nil {
-		return errors.WithStack(err)
+		if !errors.Is(err, redis.Nil) {
+			return errors.WithStack(err)
+		}
 	}
 	if job.DoneTimes > 0 {
 		return errors.New("job is doing")
