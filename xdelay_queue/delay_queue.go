@@ -129,12 +129,29 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 			return errors.WithStack(err)
 		}
 	}
-	if job.DoneTimes > 0 {
+	var (
+		bucketName string
+		bucketIdx  int
+		doneTimes  int64
+	)
+	if job == nil {
+		jobBucket := <-dq.bucketNameChan
+		bucketName = jobBucket.BucketName
+		bucketIdx = jobBucket.BucketIndex
+	} else {
+		bucketName = job.BucketName
+		bucketIdx = job.BucketIndex
+		doneTimes = job.DoneTimes
+	}
+	if doneTimes > 0 {
 		return errors.New("job is doing")
 	}
 	value, err := json.Marshal(&Job{
-		JobCore:   jobCore,
-		JobBucket: job.JobBucket,
+		JobCore: jobCore,
+		JobBucket: &JobBucket{
+			BucketName:  bucketName,
+			BucketIndex: bucketIdx,
+		},
 		DoneTimes: 0,
 	})
 	if err != nil {
