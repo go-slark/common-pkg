@@ -130,15 +130,18 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 		}
 	}
 	var (
+		jobId      string
 		bucketName string
 		bucketIdx  int
 		doneTimes  int64
 	)
 	if job == nil {
+		jobId = jobCore.Id
 		jobBucket := <-dq.bucketNameChan
 		bucketName = jobBucket.BucketName
 		bucketIdx = jobBucket.BucketIndex
 	} else {
+		jobId = job.Id
 		bucketName = job.BucketName
 		bucketIdx = job.BucketIndex
 		doneTimes = job.DoneTimes
@@ -161,7 +164,7 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 	return redis.NewScript(`
         redis.call("SET", KEYS[1], ARGV[1])
         redis.call("ZADD", KEYS[2], ARGV[2], ARGV[3])
-    `).Run(dq.Client, []string{job.Id, job.BucketName}, value, float64(jobCore.Delay), job.Id).Err()
+    `).Run(dq.Client, []string{jobId, bucketName}, value, float64(jobCore.Delay), jobId).Err()
 }
 
 func (dq *DelayQueue) BatchAddJob(jobCores []*JobCore) error {
