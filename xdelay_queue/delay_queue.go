@@ -266,6 +266,9 @@ func (dq *DelayQueue) handleTicker(t time.Time, bucketName string) {
 
 		job, err := dq.getJob(bucketZ.jobId)
 		if err != nil {
+			if errors.Is(err, redis.Nil) {
+				_ = dq.removeJobFromBucketZ(bucketName, bucketZ.jobId)
+			}
 			continue
 		}
 
