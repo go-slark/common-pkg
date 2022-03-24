@@ -146,9 +146,9 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 		bucketIdx = job.BucketIndex
 		doneTimes = job.DoneTimes
 	}
-	if doneTimes > 0 {
-		return errors.New("job is doing")
-	}
+	//if doneTimes > 0 {
+	//	return errors.New("job is doing")
+	//}
 	value, err := json.Marshal(&Job{
 		JobCore: jobCore,
 		JobBucket: &JobBucket{
