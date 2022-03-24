@@ -133,7 +133,7 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 		jobId      string
 		bucketName string
 		bucketIdx  int
-		doneTimes  int64
+		//doneTimes  int64
 	)
 	if job == nil {
 		jobId = jobCore.Id
@@ -144,7 +144,7 @@ func (dq *DelayQueue) UpdateJob(jobCore *JobCore) error {
 		jobId = job.Id
 		bucketName = job.BucketName
 		bucketIdx = job.BucketIndex
-		doneTimes = job.DoneTimes
+		//doneTimes = job.DoneTimes
 	}
 	//if doneTimes > 0 {
 	//	return errors.New("job is doing")
