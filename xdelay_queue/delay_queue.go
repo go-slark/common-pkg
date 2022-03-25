@@ -99,8 +99,10 @@ func (dq *DelayQueue) GetJob(topics []string) (*Job, error) {
         redis.call("SET", KEYS[1], ARGV[1])
         redis.call("ZADD", KEYS[2], ARGV[2], ARGV[3])
     `).Run(dq.Client, []string{job.Id, jobBucket.BucketName}, value, float64(time.Now().Unix()+job.TTR), job.Id).Err()
+		return job, nil
 	}
-	return job, nil
+	//delete done job
+	return nil, dq.deleteJob(jobId)
 }
 
 func (dq *DelayQueue) DeleteJob(jobId string) error {
