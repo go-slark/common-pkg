@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/nickxb/pkg/xruntime"
+	"github.com/smallfish-root/common-pkg/xruntime"
 	"net/http/httputil"
 )
 
-
-
 func Recovery(fn func(ctx *gin.Context, err interface{})) gin.HandlerFunc {
-
 	return func(ctx *gin.Context) {
-
 		defer func() {
 			if err := recover(); err != nil {
 				fn(ctx, err)
@@ -25,7 +21,6 @@ func Recovery(fn func(ctx *gin.Context, err interface{})) gin.HandlerFunc {
 				ctx.Abort()
 			}
 		}()
-		ctx.Next()
+		//ctx.Next()
 	}
 }
-
