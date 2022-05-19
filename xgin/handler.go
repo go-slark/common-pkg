@@ -35,10 +35,11 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 	}
 }
 
-func JSON(code int, obj interface{}) xrender.Render {
+func JSON(code int, obj interface{}, err error) xrender.Render {
 	r := xrender.JSON{}
 	r.Code_ = code
 	r.Data = obj
+	r.Error.Update(err)
 	return r
 }
 
@@ -57,7 +58,6 @@ func DataFromReader(code int, contentLength int64, contentType string, reader io
 	r.ContentType = contentType
 	r.ContentLength = contentLength
 	r.Reader.Reader = reader
-
 	return r
 }
 

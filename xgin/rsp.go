@@ -20,7 +20,7 @@ func Success(data interface{}) xrender.Render {
 		Code: 0,
 		Msg:  "成功",
 		Data: data,
-	})
+	}, nil)
 }
 
 func Error(err error) xrender.Render {
@@ -29,7 +29,7 @@ func Error(err error) xrender.Render {
 		Code: e.Code,
 		Msg:  e.Msg,
 		Data: struct{}{},
-	})
+	}, err)
 }
 
 func Reply(data interface{}, err error) xrender.Render {

@@ -23,3 +23,7 @@ type Error struct {
 func (e Error) Err() error {
 	return e.error
 }
+
+func (e *Error) Update(err error) {
+	e.error = err
+}
