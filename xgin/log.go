@@ -19,7 +19,7 @@ func Logger() gin.HandlerFunc {
 		ctx.Next()
 		for _, err := range ctx.Errors {
 			if err != nil {
-				logger.Errorf("%+v", err)
+				logger.Errorf("%+v", err.Err)
 			}
 		}
 	}
