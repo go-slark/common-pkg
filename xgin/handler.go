@@ -1,21 +1,37 @@
 package xgin
 
 import (
-	"io"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/smallfish-root/common-pkg/xgin/xrender"
+	"io"
+	"net/http"
 )
 
-type DecoratorHandlerFunc func(*gin.Context) xrender.Render
+type decoratorHandlerFunc func(*gin.Context) xrender.Render
 
-func HandlerDecorator(fn DecoratorHandlerFunc) gin.HandlerFunc {
+type handlerFunc func(*gin.Context) error
+
+func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		r := fn(ctx)
-		if r != nil {
-			ctx.Render(r.Code(), r)
+		for _, f := range fs {
+			err := f(ctx)
+			if err != nil {
+				r := Error(err)
+				ctx.Render(r.Code(), r)
+				ctx.Abort()
+				return
+			}
 		}
+
+		r := fn(ctx)
+		if r == nil {
+			return
+		}
+		err := r.Err()
+		if err != nil {
+			_ = ctx.Error(err)
+		}
+		ctx.Render(r.Code(), r)
 	}
 }
 
