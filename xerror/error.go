@@ -10,7 +10,7 @@ import (
 
 const (
 	UnknownReason = ""
-	UnknownCode   = 1000
+	UnknownCode   = 600
 )
 
 type customError struct {
@@ -23,7 +23,7 @@ func (e customError) Error() string {
 }
 
 func NewError(code int, reason, msg string, metadata map[string]string, err error) error {
-	return customError{
+	return &customError{
 		Status: Status{
 			Code:     int32(code),
 			Reason:   reason,
@@ -41,7 +41,7 @@ func GetErr(err error) *customError {
 		},
 		error: err,
 	}
-	errors.As(err, e)
+	errors.As(err, &e)
 	return e
 }
 
