@@ -137,7 +137,6 @@ github.com/nickxb/gin-http-logger
 # github.com/nickxb/pkg v0.6.1
 github.com/nickxb/pkg/xjson
 github.com/nickxb/pkg/xqueue
-github.com/nickxb/pkg/xruntime
 github.com/nickxb/pkg/xsync
 # github.com/olivere/elastic v6.2.35+incompatible
 github.com/olivere/elastic
@@ -254,6 +253,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # google.golang.org/genproto v0.0.0-20210813162853-db860fec028c
+google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.39.1
 google.golang.org/grpc
