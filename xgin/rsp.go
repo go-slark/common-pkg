@@ -26,8 +26,8 @@ func Success(data interface{}) xrender.Render {
 func Error(err error) xrender.Render {
 	e := xerror.GetErr(err)
 	return JSON(http.StatusOK, &Response{
-		Code: e.Code,
-		Msg:  e.Msg,
+		Code: int(e.Status.Code),
+		Msg:  e.Status.Message,
 		Data: struct{}{},
 	}, err)
 }
