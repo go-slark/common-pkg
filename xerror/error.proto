@@ -8,3 +8,5 @@ message Status {
   string message = 3;
   map<string, string> metadata = 4;
 }
+
+//cmd: protoc --go_out=plugins=grpc:. error.proto

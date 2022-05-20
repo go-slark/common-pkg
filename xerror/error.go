@@ -35,7 +35,12 @@ func NewError(code int, reason, msg string, metadata map[string]string, err erro
 }
 
 func GetErr(err error) *customError {
-	e := &customError{}
+	e := &customError{
+		Status: Status{
+			Code: UnknownCode,
+		},
+		error: err,
+	}
 	errors.As(err, e)
 	return e
 }
@@ -65,7 +70,7 @@ func (e *customError) WithMetadata(md map[string]string) *customError {
 	return err
 }
 
-func (e *customError) GrpcStatus() *status.Status {
+func (e *customError) GRPCStatus() *status.Status {
 	s, _ := status.New(codes.Code(e.Code), e.Message).
 		WithDetails(&errdetails.ErrorInfo{
 			Reason:   e.Reason,
