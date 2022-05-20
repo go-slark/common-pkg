@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package xerror;
 
+//import "google/protobuf/descriptor.proto";
+
 message Status {
   int32 code = 1;
   string reason = 2;
@@ -9,4 +11,7 @@ message Status {
   map<string, string> metadata = 4;
 }
 
-//cmd: protoc --go_out=plugins=grpc:. error.proto
+//cmd : protoc --go_out=plugins=grpc:. error.proto
+
+// 当执行protoc命令时，报import的文件找不到时，执行以下命令(解压的protoc-3.14.0 include目录下有相关的文件)
+//cmd : protoc -I=D:\\middle_ware\\protoc-3.14.0-win64\\include --go_out=plugins=grpc:. -I . error.proto
