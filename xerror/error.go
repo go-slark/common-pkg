@@ -73,7 +73,8 @@ func (e *customError) WithMetadata(md map[string]string) *customError {
 func (e *customError) GRPCStatus() *status.Status {
 	s, _ := status.New(codes.Code(e.Code), e.Message).
 		WithDetails(&errdetails.ErrorInfo{
-			Reason:   e.Reason,
+			//Reason:   e.Reason,
+			Reason:   fmt.Sprintf("%+v", e.error),
 			Metadata: e.Metadata,
 		})
 	return s
