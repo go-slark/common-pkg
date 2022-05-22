@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	httpLogger "github.com/nickxb/gin-http-logger"
 	"github.com/sirupsen/logrus"
+	httpLogger "github.com/smallfish-root/gin-http-logger"
 )
 
 func AccessLogger(file string, level string, excludePaths ...string) gin.HandlerFunc {
@@ -34,9 +34,9 @@ func AccessLogger(file string, level string, excludePaths ...string) gin.Handler
 		DropSize:       1024 * 10, //10k
 	}
 
-	alc.ExcludePaths = map[string]bool{}
+	alc.ExcludePaths = map[string]struct{}{}
 	for _, excludePath := range excludePaths {
-		alc.ExcludePaths[excludePath] = true
+		alc.ExcludePaths[excludePath] = struct{}{}
 	}
 
 	return httpLogger.New(alc)

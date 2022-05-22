@@ -7,20 +7,21 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.4.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/jinzhu/gorm v1.9.16
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/looplab/eventhorizon v0.14.7
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/nickxb/gin-http-logger v1.1.1-0.20191028062356-c63c682255f4
-	github.com/nickxb/pkg v0.6.1
 	github.com/olivere/elastic v6.2.35+incompatible
 	github.com/onsi/gomega v1.16.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smallfish-root/eventhorizon v1.0.1
+	github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
 	go.mongodb.org/mongo-driver v1.7.1
 	google.golang.org/genproto v0.0.0-20210813162853-db860fec028c
 	google.golang.org/grpc v1.39.1

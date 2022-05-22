@@ -3,7 +3,7 @@ package redisimpl
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
-	"github.com/nickxb/pkg/xqueue"
+	"github.com/smallfish-root/common-pkg/xqueue"
 )
 
 type redisImpl struct {

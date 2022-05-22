@@ -35,12 +35,12 @@ type AccessLoggerConfig struct {
 	MaxBodyLogSize int64
 	BodyLogPolicy  int
 	RetryInterval  time.Duration
-	ExcludePaths   map[string]bool
+	ExcludePaths   map[string]struct{}
 }
 
 func buildLoggingMiddleware(conf AccessLoggerConfig, logQueue LogForwardingQueue) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if conf.ExcludePaths != nil && conf.ExcludePaths[c.Request.URL.Path] {
+		if _, ok := conf.ExcludePaths[c.Request.URL.Path]; ok {
 			c.Next()
 			return
 		}

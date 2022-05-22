@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/globalsign/mgo"
-	"github.com/nickxb/pkg/xsync"
+	"github.com/smallfish-root/common-pkg/xsync"
 )
 
 var (

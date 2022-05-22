@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"github.com/nickxb/pkg/xjson"
+	"github.com/smallfish-root/common-pkg/xjson"
 	"sync"
 	"time"
 )

@@ -1,4 +1,4 @@
-module github.com/nickxb/gin-http-logger
+module github.com/smallfish-root/gin-http-logger
 
 go 1.12
 
