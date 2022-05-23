@@ -15,6 +15,7 @@ const (
 
 type customError struct {
 	Status
+	Surplus interface{}
 	error
 }
 
@@ -22,7 +23,7 @@ func (e customError) Error() string {
 	return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.error)
 }
 
-func NewError(code int, reason, msg string) *customError {
+func NewError(code int, msg, reason string) *customError {
 	return &customError{
 		Status: Status{
 			Code:    int32(code),
@@ -57,15 +58,21 @@ func (e *customError) Is(err error) bool {
 }
 
 func (e *customError) WithError(cause error) *customError {
-	err := clone(e)
-	err.error = fmt.Errorf("%+v", cause)
-	return err
+	//err := clone(e)
+	e.error = fmt.Errorf("%+v", cause)
+	return e
 }
 
 func (e *customError) WithMetadata(md map[string]string) *customError {
-	err := clone(e)
-	err.Metadata = md
-	return err
+	//err := clone(e)
+	e.Metadata = md
+	return e
+}
+
+func (e *customError) WithSurplus(surplus interface{}) *customError {
+	//err := clone(e)
+	e.Surplus = surplus
+	return e
 }
 
 func (e *customError) GRPCStatus() *status.Status {
