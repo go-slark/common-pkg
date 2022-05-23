@@ -22,15 +22,13 @@ func (e customError) Error() string {
 	return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.error)
 }
 
-func NewError(code int, reason, msg string, metadata map[string]string, err error) error {
+func NewError(code int, reason, msg string) *customError {
 	return &customError{
 		Status: Status{
-			Code:     int32(code),
-			Reason:   reason,
-			Message:  msg,
-			Metadata: metadata,
+			Code:    int32(code),
+			Reason:  reason,
+			Message: msg,
 		},
-		error: err,
 	}
 }
 
@@ -59,13 +57,13 @@ func (e *customError) Is(err error) bool {
 }
 
 func (e *customError) WithError(cause error) *customError {
-	err := Clone(e)
-	err.error = cause
+	err := clone(e)
+	err.error = fmt.Errorf("%+v", cause)
 	return err
 }
 
 func (e *customError) WithMetadata(md map[string]string) *customError {
-	err := Clone(e)
+	err := clone(e)
 	err.Metadata = md
 	return err
 }
@@ -78,16 +76,6 @@ func (e *customError) GRPCStatus() *status.Status {
 			Metadata: e.Metadata,
 		})
 	return s
-}
-
-func New(code int, reason, message string) *customError {
-	return &customError{
-		Status: Status{
-			Code:    int32(code),
-			Message: message,
-			Reason:  reason,
-		},
-	}
 }
 
 func Code(err error) int {
@@ -104,7 +92,7 @@ func Reason(err error) string {
 	return FromError(err).Reason
 }
 
-func Clone(err *customError) *customError {
+func clone(err *customError) *customError {
 	metadata := make(map[string]string, len(err.Metadata))
 	for k, v := range err.Metadata {
 		metadata[k] = v
@@ -129,7 +117,7 @@ func FromError(err error) *customError {
 	}
 	gs, ok := status.FromError(err)
 	if ok {
-		ret := New(
+		ret := NewError(
 			int(gs.Code()),
 			UnknownReason,
 			gs.Message(),
@@ -143,5 +131,5 @@ func FromError(err error) *customError {
 		}
 		return ret
 	}
-	return New(UnknownCode, UnknownReason, err.Error())
+	return NewError(UnknownCode, UnknownReason, err.Error())
 }
