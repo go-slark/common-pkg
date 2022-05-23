@@ -23,7 +23,7 @@ func (e customError) Error() string {
 	return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.error)
 }
 
-func NewError(code int, msg, reason string) *customError {
+func NewError(code int, reason, msg string) *customError {
 	return &customError{
 		Status: Status{
 			Code:    int32(code),
