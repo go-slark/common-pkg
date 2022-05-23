@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	UnknownReason = ""
+	UnknownReason = "UNKNOWN_REASON"
 	UnknownCode   = 600
 )
 
@@ -20,7 +20,7 @@ type customError struct {
 }
 
 func (e customError) Error() string {
-	return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.error)
+	return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, surplus:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.Surplus, e.error)
 }
 
 func NewError(code int, reason, msg string) *customError {
@@ -58,21 +58,21 @@ func (e *customError) Is(err error) bool {
 }
 
 func (e *customError) WithError(cause error) *customError {
-	//err := clone(e)
-	e.error = fmt.Errorf("%+v", cause)
-	return e
+	err := clone(e)
+	err.error = fmt.Errorf("%+v", cause)
+	return err
 }
 
 func (e *customError) WithMetadata(md map[string]string) *customError {
-	//err := clone(e)
-	e.Metadata = md
-	return e
+	err := clone(e)
+	err.Metadata = md
+	return err
 }
 
 func (e *customError) WithSurplus(surplus interface{}) *customError {
-	//err := clone(e)
-	e.Surplus = surplus
-	return e
+	err := clone(e)
+	err.Surplus = surplus
+	return err
 }
 
 func (e *customError) GRPCStatus() *status.Status {
@@ -112,6 +112,7 @@ func clone(err *customError) *customError {
 			Message:  err.Message,
 			Metadata: metadata,
 		},
+		Surplus: err.Surplus,
 	}
 }
 
