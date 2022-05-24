@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/smallfish-root/common-pkg/xerror"
 	"github.com/smallfish-root/common-pkg/xvalidator"
 	"reflect"
 )
@@ -30,7 +31,8 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 		case uriFormatReq:
 			f = ctx.ShouldBindUri
 		default:
-			r := Error(errors.New(fmt.Sprintf("req format invalid, req format is :%v", format)))
+			r := Error(xerror.NewError(xerror.FormatInvalidCode, xerror.FormatInvalid, xerror.FormatInvalid).WithError(errors.New(fmt.Sprintf("invalid format:%d", format))))
+			_ = ctx.Error(r.Err())
 			ctx.Render(r.Code(), r)
 			ctx.Abort()
 			return
@@ -42,7 +44,8 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 			if len(te) != 0 {
 				err = errors.New(fmt.Sprintf("%v", te))
 			}
-			r := Error(err)
+			r := Error(xerror.NewError(xerror.ParamValidCode, xerror.ParamValid, err.Error()).WithError(err))
+			_ = ctx.Error(r.Err())
 			ctx.Render(r.Code(), r)
 			ctx.Abort()
 			return

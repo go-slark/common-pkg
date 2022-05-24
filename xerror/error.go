@@ -11,6 +11,12 @@ import (
 const (
 	UnknownReason = "UNKNOWN_REASON"
 	UnknownCode   = 600
+
+	ParamValid     = "PARAM_VALID"
+	ParamValidCode = 601
+
+	FormatInvalid     = "FORMAT_INVALID"
+	FormatInvalidCode = 602
 )
 
 type customError struct {
