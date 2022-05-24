@@ -14,6 +14,5 @@ func SetEngine(env string, vts ...xvalidator.ValidTrans) {
 	default:
 		gin.SetMode(gin.DebugMode)
 	}
-	xvalidator.SetValidatorToV9()
 	xvalidator.RegisterCustomValidator(vts...)
 }

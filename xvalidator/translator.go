@@ -8,11 +8,12 @@ import (
 	zhTrans "gopkg.in/go-playground/validator.v9/translations/zh"
 )
 
-var validTran ut.Translator
+var translator ut.Translator
 
 func init() {
-	validTran, _ = ut.New(zh.New()).GetTranslator("zh")
-	_ = zhTrans.RegisterDefaultTranslations(binding.Validator.Engine().(*validator.Validate), validTran)
+	setValidatorToV9()
+	translator, _ = ut.New(zh.New()).GetTranslator("zh")
+	_ = zhTrans.RegisterDefaultTranslations(binding.Validator.Engine().(*validator.Validate), translator)
 }
 
 func translate(trans ut.Translator, fe validator.FieldError) string {
@@ -29,7 +30,7 @@ func registerTranslator(tag string, msg string) validator.RegisterTranslationsFu
 	}
 }
 
-func Error(err error) []string {
+func ParseError(err error) []string {
 	ves, ok := err.(validator.ValidationErrors)
 	if !ok {
 		return nil
@@ -37,7 +38,7 @@ func Error(err error) []string {
 
 	e := make([]string, 0, len(ves))
 	for _, ve := range ves {
-		t := ve.Translate(validTran)
+		t := ve.Translate(translator)
 		e = append(e, t)
 	}
 	return e

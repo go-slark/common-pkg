@@ -17,7 +17,7 @@ func RegisterCustomValidator(vts ...ValidTrans) {
 	v := binding.Validator.Engine().(*validator.Validate)
 	for _, vt := range vts {
 		_ = v.RegisterValidation(vt.Tag, vt.Func)
-		_ = v.RegisterTranslation(vt.Tag, validTran, registerTranslator(vt.Tag, vt.Msg), translate)
+		_ = v.RegisterTranslation(vt.Tag, translator, registerTranslator(vt.Tag, vt.Msg), translate)
 	}
 }
 
