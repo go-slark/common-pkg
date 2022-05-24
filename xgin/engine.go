@@ -2,11 +2,21 @@ package xgin
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/smallfish-root/common-pkg/xerror"
 	"github.com/smallfish-root/common-pkg/xvalidator"
+	"net/http"
 )
 
-func SetEngine(env string, vts ...xvalidator.ValidTrans) {
-	switch env {
+type EngineParam struct {
+	Env         string
+	BaseUrl     string
+	Routers     []func(r gin.IRouter)
+	HandlerFunc []gin.HandlerFunc
+	ValidTrans  []xvalidator.ValidTrans
+}
+
+func SetEngine(param EngineParam) *gin.Engine {
+	switch param.Env {
 	case "prod":
 		gin.SetMode(gin.ReleaseMode)
 	case "test":
@@ -14,5 +24,16 @@ func SetEngine(env string, vts ...xvalidator.ValidTrans) {
 	default:
 		gin.SetMode(gin.DebugMode)
 	}
-	xvalidator.RegisterCustomValidator(vts...)
+	xvalidator.RegisterCustomValidator(param.ValidTrans...)
+	engine := gin.New()
+	engine.Use(Recovery(func(ctx *gin.Context, err interface{}) {
+		ctx.Render(http.StatusOK, Error(xerror.NewError(xerror.ParamValidCode, xerror.Panic, xerror.Panic).WithSurplus(err)))
+	}))
+	engine.Use(ErrLogger())
+	engine.Use(param.HandlerFunc...)
+	g := engine.Group(param.BaseUrl)
+	for _, router := range param.Routers {
+		router(g)
+	}
+	return engine
 }

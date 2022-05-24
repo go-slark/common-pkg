@@ -17,6 +17,9 @@ const (
 
 	FormatInvalid     = "FORMAT_INVALID"
 	FormatInvalidCode = 602
+
+	Panic     = "PANIC"
+	PanicCode = 603
 )
 
 type customError struct {
