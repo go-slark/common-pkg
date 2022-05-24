@@ -38,7 +38,7 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 
 		req := reflect.New(reqType).Interface()
 		if err := f(req); err != nil {
-			te := xvalidator.Error(err)
+			te := xvalidator.ParseError(err)
 			if len(te) != 0 {
 				err = errors.New(fmt.Sprintf("%v", te))
 			}
