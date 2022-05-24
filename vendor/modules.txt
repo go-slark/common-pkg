@@ -54,6 +54,12 @@ github.com/gomodule/redigo/internal
 github.com/gomodule/redigo/redis
 # github.com/google/uuid v1.3.0
 github.com/google/uuid
+# github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+github.com/grpc-ecosystem/go-grpc-middleware
+github.com/grpc-ecosystem/go-grpc-middleware/recovery
+github.com/grpc-ecosystem/go-grpc-middleware/retry
+github.com/grpc-ecosystem/go-grpc-middleware/util/backoffutils
+github.com/grpc-ecosystem/go-grpc-middleware/util/metautils
 # github.com/hashicorp/go-uuid v1.0.2
 github.com/hashicorp/go-uuid
 # github.com/jcmturner/aescts/v2 v2.0.0

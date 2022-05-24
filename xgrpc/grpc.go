@@ -2,97 +2,91 @@ package xgrpc
 
 import (
 	"context"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/keepalive"
 	"net"
+	"sync"
 	"time"
 )
 
-// RPCServer is RPC server config.
-type RPCServer struct {
-	Network           string
-	Addr              string
-	Timeout           time.Duration
-	IdleTimeout       time.Duration
-	MaxLifeTime       time.Duration
-	ForceCloseWait    time.Duration
-	KeepAliveInterval time.Duration
-	KeepAliveTimeout  time.Duration
+var (
+	once     sync.Once
+	grpcConn = make(map[string]*grpc.ClientConn)
+)
+
+type GrpcClientConf struct {
+	Alias string
+	Addr  string
 }
 
-//f is register server function,在业务中实现注册; server实现
-//close graceful: srv.GracefulStop()
-func NewGrpcServer(c RPCServer, server interface{}, f func(s *grpc.Server, server interface{})) (*grpc.Server, error) {
-	keepParams := grpc.KeepaliveParams(keepalive.ServerParameters{
-		MaxConnectionIdle:     time.Duration(c.IdleTimeout),
-		MaxConnectionAgeGrace: time.Duration(c.ForceCloseWait),
-		Time:                  time.Duration(c.KeepAliveInterval),
-		Timeout:               time.Duration(c.KeepAliveTimeout),
-		MaxConnectionAge:      time.Duration(c.MaxLifeTime),
-	})
-	srv := grpc.NewServer(keepParams)
-	//pb.RegisterLogicServer(srv, &server{l})
-	f(srv, server)
-	lis, err := net.Listen(c.Network, c.Addr)
+func newGrpcClient(addr string) (*grpc.ClientConn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	retryOps := []grpc_retry.CallOption{
+		grpc_retry.WithMax(2),
+		grpc_retry.WithPerRetryTimeout(time.Second * 2),
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinearWithJitter(time.Second/2, 0.2)),
+	}
+	retry := grpc_retry.UnaryClientInterceptor(retryOps...)
+	// lb: k8s headless svc
+	opts := []grpc.DialOption{grpc.WithUnaryInterceptor(retry), grpc.WithInsecure(), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`)}
+	c, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
-		logrus.Errorf("start grpc listen fail, addr:%v, err:%+v", c.Addr, err)
-		return srv, errors.WithStack(err)
+		return nil, errors.WithStack(err)
+	}
+	return c, nil
+}
+
+func NewGrpcClient(conf []*GrpcClientConf) []*grpc.ClientConn {
+	clients := make([]*grpc.ClientConn, 0, len(conf))
+	once.Do(func() {
+		for _, c := range conf {
+			cli, err := newGrpcClient(c.Addr)
+			if err != nil {
+				panic(err)
+			}
+			grpcConn[c.Alias] = cli
+			clients = append(clients, cli)
+		}
+	})
+	return clients
+}
+
+func GetGrpcClient(alias string) *grpc.ClientConn {
+	return grpcConn[alias]
+}
+
+type GrpcServerConf struct {
+	NetWork string
+	Addr    string
+}
+
+type Server struct {
+	Obj      interface{}
+	Register func(s *grpc.Server, obj interface{})
+}
+
+func (s *Server) NewGrpcServer(conf *GrpcServerConf) (*grpc.Server, error) {
+	srv := grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+		grpc_recovery.UnaryServerInterceptor(),
+	)), grpc.KeepaliveParams(keepalive.ServerParameters{
+		MaxConnectionAge: 3 * time.Minute,
+	}))
+	s.Register(srv, s.Obj)
+	listen, err := net.Listen(conf.NetWork, conf.Addr)
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	go func() {
-		if err := srv.Serve(lis); err != nil {
-			logrus.Errorf("start grpc server fail, err:%+v", err)
+		err = srv.Serve(listen)
+		if err != nil {
+			panic(errors.WithStack(err))
 		}
 	}()
 	return srv, nil
-}
-
-// RPCClient is RPC client config.
-type RPCClient struct {
-	Dial    time.Duration
-	Timeout time.Duration
-}
-
-const (
-	minServerHeartbeat = time.Minute * 10
-	maxServerHeartbeat = time.Minute * 30
-	// grpc options
-	grpcInitialWindowSize     = 1 << 24
-	grpcInitialConnWindowSize = 1 << 24
-	grpcMaxSendMsgSize        = 1 << 24
-	grpcMaxCallMsgSize        = 1 << 24
-	grpcKeepAliveTime         = time.Second * 10
-	grpcKeepAliveTimeout      = time.Second * 3
-	grpcBackoffMaxDelay       = time.Second * 3
-)
-
-//client conn实现pb interface, client call
-//invoke
-func NewGrpcClient(c RPCClient, dns string) (*grpc.ClientConn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Dial))
-	defer cancel()
-	//target is grpc dns
-	conn, err := grpc.DialContext(ctx, dns,
-		[]grpc.DialOption{
-			grpc.WithInsecure(),
-			grpc.WithInitialWindowSize(grpcInitialWindowSize),
-			grpc.WithInitialConnWindowSize(grpcInitialConnWindowSize),
-			grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(grpcMaxCallMsgSize)),
-			grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(grpcMaxSendMsgSize)),
-			grpc.WithBackoffMaxDelay(grpcBackoffMaxDelay),
-			grpc.WithKeepaliveParams(keepalive.ClientParameters{
-				Time:                grpcKeepAliveTime,
-				Timeout:             grpcKeepAliveTimeout,
-				PermitWithoutStream: true,
-			}),
-			grpc.WithBalancerName(roundrobin.Name),
-		}...)
-	if err != nil {
-		logrus.Errorf("grpc client dial fail, err:%+v", err)
-		return conn, errors.WithStack(err)
-	}
-	return conn, nil
 }
