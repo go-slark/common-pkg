@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/smallfish-root/common-pkg/xvalidator"
 	"reflect"
 )
 
@@ -37,6 +38,10 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 
 		req := reflect.New(reqType).Interface()
 		if err := f(req); err != nil {
+			te := xvalidator.Error(err)
+			if len(te) != 0 {
+				err = errors.New(fmt.Sprintf("%v", te))
+			}
 			r := Error(err)
 			ctx.Render(r.Code(), r)
 			ctx.Abort()

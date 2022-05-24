@@ -7,12 +7,18 @@ import (
 	"regexp"
 )
 
-func RegisterCustomValidator() {
+type ValidTrans struct {
+	Tag string
+	Msg string
+	validator.Func
+}
+
+func RegisterCustomValidator(vts ...ValidTrans) {
 	v := binding.Validator.Engine().(*validator.Validate)
-	v.RegisterValidation("is-objectid", ValidateObjectId)
-	v.RegisterValidation("ValidateMobile", ValidateMobile)
-	v.RegisterValidation("ValidateIdCard", ValidateIdCard)
-	v.RegisterValidation("ValidateStrLen", ValidateStrLen)
+	for _, vt := range vts {
+		_ = v.RegisterValidation(vt.Tag, vt.Func)
+		_ = v.RegisterTranslation(vt.Tag, validTran, registerTranslator(vt.Tag, vt.Msg), translate)
+	}
 }
 
 func ValidateObjectId(fl validator.FieldLevel) bool {

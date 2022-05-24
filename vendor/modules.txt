@@ -26,6 +26,7 @@ github.com/globalsign/mgo/internal/scram
 # github.com/go-playground/locales v0.14.0
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
+github.com/go-playground/locales/zh
 # github.com/go-playground/universal-translator v0.18.0
 github.com/go-playground/universal-translator
 # github.com/go-redis/redis v6.15.9+incompatible
@@ -331,6 +332,7 @@ google.golang.org/protobuf/types/known/timestamppb
 gopkg.in/go-playground/validator.v8
 # gopkg.in/go-playground/validator.v9 v9.28.0
 gopkg.in/go-playground/validator.v9
+gopkg.in/go-playground/validator.v9/translations/zh
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
 # gorm.io/driver/mysql v1.0.6
