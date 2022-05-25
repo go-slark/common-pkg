@@ -7,15 +7,40 @@ import (
 	"github.com/pkg/errors"
 )
 
+/*
+[kafka]
+    [kafka.producer]
+       brokers = ["192.168.4.14:9092"]
+       topic = "exam_msg_prod"
+       retry = 5
+
+    [kafka.consumer_group]
+       brokers = ["192.168.4.14:9092"]
+       group_id = "logic-server"
+       topics = ["exam_prod"]
+
+func InitKafka() {
+	conf := &mq.KafkaConf{}
+	err := viper.UnmarshalKey("kafka", conf, func(decoderConfig *mapstructure.DecoderConfig) {
+		decoderConfig.TagName = "mapstructure"
+	})
+	if err != nil {
+		panic(fmt.Sprintf("parse kafka config %v\n", err))
+	}
+
+	mq.InitKafkaProducer(conf)
+    mq.InitKafkaConsumer(conf)
+}
+
+*/
+
 type KafkaProducer struct {
 	sarama.SyncProducer
 	sarama.AsyncProducer
-	Topic string
 }
 
 type ProducerConf struct {
 	Brokers []string `mapstructure:"brokers"`
-	Topic   string   `mapstructure:"topic"`
 	Retry   int      `mapstructure:"retry"`
 }
 
@@ -74,7 +99,6 @@ func InitKafkaProducer(conf *KafkaConf) {
 	kafkaProducer = &KafkaProducer{
 		SyncProducer:  newSyncProducer(conf),
 		AsyncProducer: newAsyncProducer(conf),
-		Topic:         conf.Producer.Topic,
 	}
 }
 
