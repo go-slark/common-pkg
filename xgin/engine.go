@@ -27,7 +27,7 @@ func SetEngine(param EngineParam) *gin.Engine {
 	xvalidator.RegisterCustomValidator(param.ValidTrans...)
 	engine := gin.New()
 	engine.Use(Recovery(func(ctx *gin.Context, err interface{}) {
-		ctx.Render(http.StatusOK, Error(xerror.NewError(xerror.ParamValidCode, xerror.Panic, xerror.Panic).WithSurplus(err)))
+		ctx.Render(http.StatusOK, Error(xerror.NewError(xerror.PanicCode, xerror.Panic, xerror.Panic).WithSurplus(err)))
 	}))
 	engine.Use(ErrLogger())
 	engine.Use(param.HandlerFunc...)

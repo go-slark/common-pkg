@@ -25,6 +25,7 @@ const (
 type customError struct {
 	Status
 	Surplus interface{}
+	clone   bool
 	error
 }
 
@@ -109,6 +110,10 @@ func Reason(err error) string {
 }
 
 func clone(err *customError) *customError {
+	if err.clone {
+		return err
+	}
+	err.clone = true
 	metadata := make(map[string]string, len(err.Metadata))
 	for k, v := range err.Metadata {
 		metadata[k] = v
