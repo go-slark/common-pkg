@@ -24,6 +24,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smallfish-root/eventhorizon v1.0.1
 	github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
+	github.com/xuri/excelize/v2 v2.6.0
 	go.mongodb.org/mongo-driver v1.7.1
 	google.golang.org/genproto v0.0.0-20210813162853-db860fec028c
 	google.golang.org/grpc v1.39.1
