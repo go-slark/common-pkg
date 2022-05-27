@@ -4,14 +4,14 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/zh"
 	"github.com/go-playground/universal-translator"
-	"gopkg.in/go-playground/validator.v9"
-	zhTrans "gopkg.in/go-playground/validator.v9/translations/zh"
+	"github.com/go-playground/validator/v10"
+	zhTrans "github.com/go-playground/validator/v10/translations/zh"
 )
 
 var translator ut.Translator
 
 func init() {
-	setValidatorToV9()
+	//setValidatorToV10()
 	translator, _ = ut.New(zh.New()).GetTranslator("zh")
 	_ = zhTrans.RegisterDefaultTranslations(binding.Validator.Engine().(*validator.Validate), translator)
 }

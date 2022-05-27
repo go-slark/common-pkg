@@ -3,7 +3,7 @@ package xvalidator
 import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/globalsign/mgo/bson"
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/go-playground/validator/v10"
 	"regexp"
 )
 
