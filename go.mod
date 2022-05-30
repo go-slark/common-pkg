@@ -22,13 +22,14 @@ require (
 	github.com/olivere/elastic v6.2.35+incompatible
 	github.com/onsi/gomega v1.16.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.6.0
 	github.com/smallfish-root/eventhorizon v1.0.1
 	github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
 	github.com/xuri/excelize/v2 v2.6.0
+	go.etcd.io/etcd/client/v3 v3.5.4
 	go.mongodb.org/mongo-driver v1.7.1
 	google.golang.org/genproto v0.0.0-20210813162853-db860fec028c
-	google.golang.org/grpc v1.39.1
+	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.27.1
 	gorm.io/driver/mysql v1.0.6
 	gorm.io/gorm v1.21.9

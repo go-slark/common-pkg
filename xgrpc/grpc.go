@@ -8,6 +8,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 	"net"
 	"sync"
@@ -34,7 +35,7 @@ func newGrpcClient(addr string) (*grpc.ClientConn, error) {
 	}
 	retry := grpc_retry.UnaryClientInterceptor(retryOps...)
 	// lb: k8s headless svc
-	opts := []grpc.DialOption{grpc.WithUnaryInterceptor(retry), grpc.WithInsecure(), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`)}
+	opts := []grpc.DialOption{grpc.WithUnaryInterceptor(retry), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`)}
 	c, err := grpc.DialContext(ctx, fmt.Sprintf("dns:///%s", addr), opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
