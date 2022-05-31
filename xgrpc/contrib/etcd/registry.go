@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/smallfish-root/common-pkg/xgrpc/registry"
 	"go.etcd.io/etcd/client/v3"
-	"math/rand"
 	"time"
 )
 
@@ -146,8 +145,6 @@ func (r *Registry) keepAlive(ctx context.Context, leaseID clientv3.LeaseID, key 
 	if err != nil {
 		curLeaseID = 0
 	}
-
-	rand.Seed(time.Now().Unix())
 
 	for {
 		var retry uint

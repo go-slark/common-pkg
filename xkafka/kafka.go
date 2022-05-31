@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
+	"time"
 )
 
 /*
@@ -174,8 +175,8 @@ func (kc *KafkaConsumerGroup) Consume() {
 		err := kc.ConsumerGroup.Consume(context.TODO(), kc.Topics, kc.ConsumerGroupHandler)
 		if err != nil {
 			fmt.Printf("consumer group consume fail, err:%+v\n", err)
-			break
 		}
+		time.Sleep(time.Second)
 	}
 }
 
