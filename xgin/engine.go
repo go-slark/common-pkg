@@ -8,11 +8,13 @@ import (
 )
 
 type EngineParam struct {
-	Env         string
-	BaseUrl     string
-	Routers     []func(r gin.IRouter)
-	HandlerFunc []gin.HandlerFunc
-	ValidTrans  []xvalidator.ValidTrans
+	Env          string
+	BaseUrl      string
+	AccessLog    bool
+	ExcludePaths []string
+	Routers      []func(r gin.IRouter)
+	HandlerFunc  []gin.HandlerFunc
+	ValidTrans   []xvalidator.ValidTrans
 }
 
 func SetEngine(param EngineParam) *gin.Engine {
@@ -30,6 +32,9 @@ func SetEngine(param EngineParam) *gin.Engine {
 		ctx.Render(http.StatusOK, Error(xerror.NewError(xerror.PanicCode, xerror.Panic, xerror.Panic).WithSurplus(err)))
 	}))
 	engine.Use(ErrLogger())
+	if param.AccessLog {
+		engine.Use(Logger(param.ExcludePaths...))
+	}
 	engine.Use(param.HandlerFunc...)
 	g := engine.Group(param.BaseUrl)
 	for _, router := range param.Routers {
