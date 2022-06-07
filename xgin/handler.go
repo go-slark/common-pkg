@@ -19,6 +19,7 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 				r := Error(err)
 				ctx.Render(r.Code(), r)
 				ctx.Abort()
+				_ = ctx.Error(err)
 				return
 			}
 		}

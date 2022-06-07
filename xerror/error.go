@@ -88,9 +88,9 @@ func (e *customError) WithSurplus(surplus interface{}) *customError {
 func (e *customError) GRPCStatus() *status.Status {
 	s, _ := status.New(codes.Code(e.Code), e.Message).
 		WithDetails(&errdetails.ErrorInfo{
-			//Reason:   e.Reason,
-			Reason:   fmt.Sprintf("%+v", e.error),
-			Metadata: e.Metadata,
+			Reason: e.Reason,
+			//Reason:   fmt.Sprintf("%+v", e.error),
+			Metadata: e.Metadata, // transmit grpc error stack and others by metadata
 		})
 	return s
 }
