@@ -1,6 +1,7 @@
 package xerror
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -24,13 +25,21 @@ const (
 
 type customError struct {
 	Status
-	Surplus interface{}
+	Surplus interface{} `json:"surplus,omitempty"`
 	clone   bool
 	error
 }
 
 func (e customError) Error() string {
-	return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, surplus:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.Surplus, e.error)
+	err, _ := json.Marshal(&struct {
+		customError
+		Error string `json:"error"`
+	}{
+		customError: e,
+		Error:       e.Error(),
+	})
+	return string(err)
+	//return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, surplus:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.Surplus, e.error)
 }
 
 func NewError(code int, reason, msg string) *customError {
@@ -91,9 +100,13 @@ func (e *customError) GRPCStatus() *status.Status {
 		//Reason:   fmt.Sprintf("%+v", e.error),
 		Metadata: e.Metadata, // transmit grpc error stack and others by metadata
 	}
-	eInfo.Metadata["err_stack"] = fmt.Sprintf("%+v", e.error)
-	s, _ := status.New(codes.Code(e.Code), e.Message).
-		WithDetails(eInfo)
+	if eInfo.Metadata == nil {
+		eInfo.Metadata = map[string]string{}
+	}
+	if e.error != nil {
+		eInfo.Metadata["err_stack"] = fmt.Sprintf("%+v", e.error)
+	}
+	s, _ := status.New(codes.Code(e.Code), e.Message).WithDetails(eInfo)
 	return s
 }
 
