@@ -21,23 +21,23 @@ const (
 
 	Panic     = "PANIC"
 	PanicCode = 603
+
+	errStack = "err_stack"
 )
 
 type customError struct {
 	Status
 	Surplus interface{} `json:"surplus,omitempty"`
+	Err     string      `json:"error,omitempty"`
 	clone   bool
 	error
 }
 
 func (e customError) Error() string {
-	err, _ := json.Marshal(&struct {
-		customError
-		Error string `json:"error"`
-	}{
-		customError: e,
-		Error:       e.Error(),
-	})
+	if e.error != nil {
+		e.Err = e.error.Error()
+	}
+	err, _ := json.Marshal(&e)
 	return string(err)
 	//return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, surplus:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.Surplus, e.error)
 }
@@ -100,11 +100,11 @@ func (e *customError) GRPCStatus() *status.Status {
 		//Reason:   fmt.Sprintf("%+v", e.error),
 		Metadata: e.Metadata, // transmit grpc error stack and others by metadata
 	}
-	if eInfo.Metadata == nil {
-		eInfo.Metadata = map[string]string{}
-	}
 	if e.error != nil {
-		eInfo.Metadata["err_stack"] = fmt.Sprintf("%+v", e.error)
+		if eInfo.Metadata == nil {
+			eInfo.Metadata = map[string]string{}
+		}
+		eInfo.Metadata[errStack] = fmt.Sprintf("%+v", e.error)
 	}
 	s, _ := status.New(codes.Code(e.Code), e.Message).WithDetails(eInfo)
 	return s
@@ -163,7 +163,10 @@ func FromError(err error) *customError {
 			switch d := detail.(type) {
 			case *errdetails.ErrorInfo:
 				ret.Reason = d.Reason
-				return ret.WithMetadata(d.Metadata)
+				ret = ret.WithMetadata(d.Metadata)
+				ret.Err = ret.Metadata[errStack]
+				delete(ret.Metadata, errStack)
+				return ret
 			}
 		}
 		return ret
