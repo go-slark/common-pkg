@@ -2,7 +2,6 @@ package xgrpc
 
 import (
 	"context"
-	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -34,9 +33,9 @@ func newGrpcClient(addr string) (*grpc.ClientConn, error) {
 		grpc_retry.WithBackoff(grpc_retry.BackoffLinearWithJitter(time.Second/2, 0.2)),
 	}
 	retry := grpc_retry.UnaryClientInterceptor(retryOps...)
-	// lb: k8s headless svc
+	// lb: k8s headless svc(fmt.Sprintf("dns:///%s", addr))
 	opts := []grpc.DialOption{grpc.WithUnaryInterceptor(retry), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`)}
-	c, err := grpc.DialContext(ctx, fmt.Sprintf("dns:///%s", addr), opts...)
+	c, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
