@@ -34,7 +34,16 @@ func newGrpcClient(addr string) (*grpc.ClientConn, error) {
 	}
 	retry := grpc_retry.UnaryClientInterceptor(retryOps...)
 	// lb: k8s headless svc(fmt.Sprintf("dns:///%s", addr))
-	opts := []grpc.DialOption{grpc.WithUnaryInterceptor(retry), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`)}
+	opts := []grpc.DialOption{
+		grpc.WithUnaryInterceptor(retry),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                10 * time.Second,
+			Timeout:             time.Second,
+			PermitWithoutStream: true,
+		}),
+	}
 	c, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -72,11 +81,22 @@ type Server struct {
 }
 
 func (s *Server) NewGrpcServer(conf *GrpcServerConf) (*grpc.Server, error) {
-	srv := grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-		grpc_recovery.UnaryServerInterceptor(),
-	)), grpc.KeepaliveParams(keepalive.ServerParameters{
-		MaxConnectionAge: 3 * time.Minute,
-	}))
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_recovery.UnaryServerInterceptor(),
+		)), grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle:     15 * time.Second,
+			MaxConnectionAge:      30 * time.Second,
+			MaxConnectionAgeGrace: 5 * time.Second,
+			Time:                  5 * time.Second,
+			Timeout:               1 * time.Second,
+		}),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             5 * time.Second,
+			PermitWithoutStream: true,
+		}),
+	}
+	srv := grpc.NewServer(opts...)
 	s.Register(srv, s.Obj)
 	listen, err := net.Listen(conf.NetWork, conf.Addr)
 	if err != nil {
