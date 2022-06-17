@@ -36,6 +36,21 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 	}
 }
 
+func Handle(fs ...handlerFunc) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		for _, f := range fs {
+			err := f(ctx)
+			if err != nil {
+				r := Error(err)
+				ctx.Render(r.Code(), r)
+				ctx.Abort()
+				_ = ctx.Error(err)
+				return
+			}
+		}
+	}
+}
+
 func JSON(code int, obj interface{}, err error) xrender.Render {
 	r := xrender.JSON{}
 	r.Code_ = code
