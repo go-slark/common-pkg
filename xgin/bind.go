@@ -3,6 +3,7 @@ package xgin
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/pkg/errors"
 	"github.com/smallfish-root/common-pkg/xerror"
 	"github.com/smallfish-root/common-pkg/xvalidator"
@@ -15,6 +16,7 @@ const (
 	jsonFormatReq uint8 = iota
 	formFormatReq
 	uriFormatReq
+	protoFormatReq
 )
 
 func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
@@ -24,18 +26,32 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 	}
 
 	return func(ctx *gin.Context) {
-		var f func(obj interface{}) error
+		var (
+			f func(obj interface{}) error
+			b binding.Binding
+		)
 		switch format {
-		case jsonFormatReq, formFormatReq:
-			f = ctx.ShouldBind
+		case jsonFormatReq:
+			b = binding.JSON
+		case formFormatReq:
+			b = binding.Form
+		case protoFormatReq:
+			b = binding.ProtoBuf
 		case uriFormatReq:
-			f = ctx.ShouldBindUri
 		default:
 			r := Error(xerror.NewError(xerror.FormatInvalidCode, xerror.FormatInvalid, xerror.FormatInvalid).WithError(errors.New(fmt.Sprintf("invalid format:%d", format))))
 			_ = ctx.Error(r.Err())
 			ctx.Render(r.Code(), r)
 			ctx.Abort()
 			return
+		}
+
+		if b == nil {
+			f = ctx.ShouldBindUri
+		} else {
+			f = func(obj interface{}) error {
+				return ctx.ShouldBindWith(obj, b)
+			}
 		}
 
 		req := reflect.New(reqType).Interface()
@@ -65,6 +81,10 @@ func BindUri(req interface{}) gin.HandlerFunc {
 
 func BindForm(req interface{}) gin.HandlerFunc {
 	return bindRequest(req, formFormatReq)
+}
+
+func BindProto(req interface{}) gin.HandlerFunc {
+	return bindRequest(req, protoFormatReq)
 }
 
 func DefaultRequest(ctx *gin.Context) interface{} {
