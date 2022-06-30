@@ -31,6 +31,7 @@ func SetEngine(param EngineParam) *gin.Engine {
 	engine.Use(Recovery(func(ctx *gin.Context, err interface{}) {
 		ctx.Render(http.StatusOK, Error(xerror.NewError(xerror.PanicCode, xerror.Panic, xerror.Panic).WithSurplus(err)))
 	}))
+	engine.Use(BuildRequestId())
 	engine.Use(ErrLogger())
 	if param.AccessLog {
 		engine.Use(Logger(param.ExcludePaths...))

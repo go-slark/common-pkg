@@ -48,6 +48,6 @@ func BuildRequestId(opts ...Option) gin.HandlerFunc {
 	}
 }
 
-func Get(ctx *gin.Context) string {
+func GetRequestId(ctx *gin.Context) string {
 	return ctx.Writer.Header().Get(requestId)
 }
