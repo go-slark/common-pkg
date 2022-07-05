@@ -8,23 +8,27 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
 	"net"
 	"sync"
 	"time"
 )
 
+// grpc client
+
 var (
 	once     sync.Once
 	grpcConn = make(map[string]*grpc.ClientConn)
 )
 
-type GrpcClientConf struct {
+type GRPCClientConf struct {
 	Alias string
 	Addr  string
 }
 
-func newGrpcClient(addr string) (*grpc.ClientConn, error) {
+func newGRPCClient(addr string) (*grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	retryOps := []grpc_retry.CallOption{
@@ -35,14 +39,15 @@ func newGrpcClient(addr string) (*grpc.ClientConn, error) {
 	retry := grpc_retry.UnaryClientInterceptor(retryOps...)
 	// lb: k8s headless svc(fmt.Sprintf("dns:///%s", addr))
 	opts := []grpc.DialOption{
-		grpc.WithUnaryInterceptor(retry),
+		grpc.WithChainUnaryInterceptor(retry, UnaryClientTimeout()),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:                10 * time.Second,
 			Timeout:             time.Second,
 			PermitWithoutStream: true,
 		}),
+		grpc.WithBlock(),
 	}
 	c, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
@@ -51,11 +56,11 @@ func newGrpcClient(addr string) (*grpc.ClientConn, error) {
 	return c, nil
 }
 
-func NewGrpcClient(conf []*GrpcClientConf) []*grpc.ClientConn {
+func NewGrpcClient(conf []*GRPCClientConf) []*grpc.ClientConn {
 	clients := make([]*grpc.ClientConn, 0, len(conf))
 	once.Do(func() {
 		for _, c := range conf {
-			cli, err := newGrpcClient(c.Addr)
+			cli, err := newGRPCClient(c.Addr)
 			if err != nil {
 				panic(err)
 			}
@@ -66,11 +71,19 @@ func NewGrpcClient(conf []*GrpcClientConf) []*grpc.ClientConn {
 	return clients
 }
 
-func GetGrpcClient(alias string) *grpc.ClientConn {
+func GetGRPCClient(alias string) *grpc.ClientConn {
 	return grpcConn[alias]
 }
 
-type GrpcServerConf struct {
+func StopGRPCClient() {
+	for _, c := range grpcConn {
+		_ = c.Close()
+	}
+}
+
+// grpc server
+
+type GRPCServerConf struct {
 	NetWork string
 	Addr    string
 }
@@ -80,7 +93,13 @@ type Server struct {
 	Register func(s *grpc.Server, obj interface{})
 }
 
-func (s *Server) NewGrpcServer(conf *GrpcServerConf) (*grpc.Server, error) {
+type GRPCServer struct {
+	*grpc.Server
+	net.Listener
+	healthServer *health.Server
+}
+
+func (s *Server) NewGrpcServer(conf *GRPCServerConf) (*GRPCServer, error) {
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
@@ -97,17 +116,31 @@ func (s *Server) NewGrpcServer(conf *GrpcServerConf) (*grpc.Server, error) {
 		}),
 	}
 	srv := grpc.NewServer(opts...)
+	server := &GRPCServer{
+		Server:       srv,
+		healthServer: health.NewServer(),
+	}
+	pbHealth.RegisterHealthServer(srv, server.healthServer)
 	s.Register(srv, s.Obj)
 	listen, err := net.Listen(conf.NetWork, conf.Addr)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	server.Listener = listen
+	return server, nil
+}
 
+func (gs *GRPCServer) Start() {
 	go func() {
-		err = srv.Serve(listen)
+		gs.healthServer.Resume()
+		err := gs.Serve(gs.Listener)
 		if err != nil {
 			panic(errors.WithStack(err))
 		}
 	}()
-	return srv, nil
+}
+
+func (gs *GRPCServer) Stop() {
+	gs.healthServer.Shutdown()
+	gs.GracefulStop()
 }
