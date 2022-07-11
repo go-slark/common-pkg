@@ -1,6 +1,9 @@
 package grpc
 
-import "google.golang.org/grpc"
+import (
+	"google.golang.org/grpc"
+	"os"
+)
 
 // GRPC Server
 
@@ -29,7 +32,11 @@ type ClientObj struct {
 func NewGRPCClient(objs []*ClientObj, opts ...ClientOption) *ClientGRPC {
 	clients := make(map[string]*Client, len(objs))
 	for _, obj := range objs {
-		clients[obj.Name] = NewClient(append(append([]ClientOption{}, WithAddr(obj.Addr)), opts...)...)
+		client := NewClient(append(append([]ClientOption{}, WithAddr(obj.Addr)), opts...)...)
+		if client.err != nil {
+			os.Exit(800)
+		}
+		clients[obj.Name] = client
 	}
 	return &ClientGRPC{clients: clients}
 }
