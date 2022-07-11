@@ -34,6 +34,10 @@ func NewGRPCClient(objs []*ClientObj, opts ...ClientOption) *ClientGRPC {
 	return &ClientGRPC{clients: clients}
 }
 
+func (c *ClientGRPC) GetGRPCClient(name string) *Client {
+	return c.clients[name]
+}
+
 func (c *ClientGRPC) Stop() {
 	for _, client := range c.clients {
 		_ = client.Stop()
