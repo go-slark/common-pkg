@@ -3,6 +3,8 @@ package xgrpc
 import (
 	"context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"sync"
 	"time"
 )
@@ -56,7 +58,13 @@ func UnaryServerTimeout(timeout time.Duration) grpc.UnaryServerInterceptor {
 		case <-ctx.Done():
 			l.Lock()
 			defer l.Unlock()
-			return nil, ctx.Err()
+			err = ctx.Err()
+			if err == context.Canceled {
+				err = status.Error(codes.Canceled, err.Error())
+			} else if err == context.DeadlineExceeded {
+				err = status.Error(codes.DeadlineExceeded, err.Error())
+			}
+			return nil, err
 		}
 	}
 }
