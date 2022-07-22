@@ -39,7 +39,7 @@ func newGRPCClient(addr string) (*grpc.ClientConn, error) {
 	retry := grpc_retry.UnaryClientInterceptor(retryOps...)
 	// lb: k8s headless svc(fmt.Sprintf("dns:///%s", addr))
 	opts := []grpc.DialOption{
-		grpc.WithChainUnaryInterceptor(retry, UnaryClientTimeout()),
+		grpc.WithChainUnaryInterceptor(retry, UnaryClientTimeout(3*time.Second)),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{

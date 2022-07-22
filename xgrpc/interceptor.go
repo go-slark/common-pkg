@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-func UnaryClientTimeout() grpc.UnaryClientInterceptor {
+func UnaryClientTimeout(defaultTime time.Duration) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		var cancel context.CancelFunc
 		if _, ok := ctx.Deadline(); !ok {
-			defaultTimeout := 3 * time.Second
+			defaultTimeout := defaultTime
 			ctx, cancel = context.WithTimeout(ctx, defaultTimeout)
 		}
 		if cancel != nil {
