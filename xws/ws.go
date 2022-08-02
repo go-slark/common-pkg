@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -17,7 +18,7 @@ type connOption struct {
 	rBuffer    int
 	wBuffer    int
 	hbInterval time.Duration
-	hbTime     time.Time
+	hbTime     int64
 	wTime      time.Duration
 	hsTime     time.Duration
 	rLimit     int64
@@ -32,7 +33,7 @@ func NewWSConn(opts ...Option) *connOption {
 		rBuffer:    1024,
 		wBuffer:    1024,
 		hbInterval: 60,
-		hbTime:     time.Now(),
+		hbTime:     time.Now().Unix(),
 		wTime:      10,
 		hsTime:     3,
 	}
@@ -133,11 +134,6 @@ func (c *connOption) read() {
 		c.wsConn.SetReadLimit(c.rLimit)
 	}
 	_ = c.wsConn.SetReadDeadline(time.Now().Add(c.hbInterval))
-	c.wsConn.SetPongHandler(func(appData string) error {
-		_ = c.wsConn.SetReadDeadline(time.Now().Add(c.hbInterval))
-		c.hbTime = time.Now()
-		return nil
-	})
 	for {
 		msgType, payload, err := c.wsConn.ReadMessage()
 		if err != nil {
@@ -150,7 +146,7 @@ func (c *connOption) read() {
 		}
 		select {
 		case c.in <- m:
-			c.hbTime = time.Now()
+			atomic.StoreInt64(&c.hbTime, time.Now().Unix())
 		case <-c.closing:
 			return
 		}
@@ -159,7 +155,10 @@ func (c *connOption) read() {
 
 func (c *connOption) write() {
 	tk := time.NewTicker(time.Duration(c.hbInterval) * 4 / 5)
-	defer tk.Stop()
+	defer func() {
+		tk.Stop()
+		c.Close()
+	}()
 
 	for {
 		select {
@@ -183,16 +182,21 @@ func (c *connOption) write() {
 }
 
 func (c *connOption) handleHB() {
+	c.wsConn.SetPongHandler(func(appData string) error {
+		_ = c.wsConn.SetReadDeadline(time.Now().Add(c.hbInterval))
+		atomic.StoreInt64(&c.hbTime, time.Now().Unix())
+		return nil
+	})
+
 	for {
-		if time.Since(c.hbTime) > c.hbInterval {
+		ts := atomic.LoadInt64(&c.hbTime)
+		if time.Now().Unix()-ts > int64(c.hbInterval) {
 			c.Close()
 			break
 		}
 		time.Sleep(2 * time.Second)
 	}
 }
-
-//expose interface rewrite
 
 func (c *connOption) Receive() (*Msg, error) {
 	select {
