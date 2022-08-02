@@ -20,14 +20,16 @@ _cgo_export.*
 _testmain.go
 
 *.exe
-*.test
 *.prof
 
 *.coverprofile
 coverage.out
-.wercker
 
-vendor/
+*.DS_Store
 
 # CI
 .env
+
+# Editors
+.vscode
+.idea

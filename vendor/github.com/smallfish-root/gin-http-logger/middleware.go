@@ -5,58 +5,46 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 //// CONFIG ////
 const (
-	// LogBodiesOnError indicates to log bodies only for 4xx & 5xx errors
-	LogBodiesOnErrors = 1 + iota
-	// LogNoBody stipulates that we should never log bodies
-	LogNoBody
-	// LogAllBodies can be used to log all request bodies (use with care)
-	LogAllBodies
+	LOG_BODIES_ON_ERROR = 1 + iota
+	LOG_NO_BODY
+	LOG_ALL_BODIES
 )
 
-// NoBodyHTTPMethods is the list of methods for which we don't log bodies cause they don't have any
-var NoBodyHTTPMethods = map[string]struct{}{
+var NOBODYMETHODS = map[string]struct{}{
 	"HEAD":    struct{}{},
 	"OPTIONS": struct{}{},
 	"GET":     struct{}{},
 }
 
-// AccessLoggerConfig describe the config of our access logger
-type AccessLoggerConfig struct {
-	LogrusLogger   *logrus.Logger
+type FluentdLoggerConfig struct {
 	Host           string
 	Port           int
-	Path           string
+	Env            string
+	Tag            string
 	DropSize       int
 	MaxBodyLogSize int64
 	BodyLogPolicy  int
 	RetryInterval  time.Duration
-	ExcludePaths   map[string]struct{}
 }
 
-func buildLoggingMiddleware(conf AccessLoggerConfig, logQueue LogForwardingQueue) gin.HandlerFunc {
+func buildLoggingMiddleware(conf FluentdLoggerConfig, logQueue LogForwardingQueue) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if _, ok := conf.ExcludePaths[c.Request.URL.Path]; ok {
-			c.Next()
-			return
-		}
-
 		var requestBody, responseBody string
 		var responseBodyLeech *LeechedGinResponseWriter
 		var requestBodyLeech *LeechedReadCloser
 
-		if conf.BodyLogPolicy != LogNoBody {
+		if conf.BodyLogPolicy != LOG_NO_BODY {
 			// Let's use a Leech to pump a limited amount of bytes on the request
 			// body into RAM as this body is read
 			bodySize := min(c.Request.ContentLength, conf.MaxBodyLogSize)
 
 			// If the Content-Length header ain't set let's use a buffer of
 			// MaxBodyLogSize to log the request body.
-			if _, ok := NoBodyHTTPMethods[c.Request.Method]; !ok && c.Request.Header.Get("content-length") == "" {
+			if _, ok := NOBODYMETHODS[c.Request.Method]; !ok && c.Request.Header.Get("content-length") == "" {
 				bodySize = conf.MaxBodyLogSize
 			}
 			requestBodyLeech = NewLeechedReadCloser(c.Request.Body, bodySize)
@@ -86,10 +74,10 @@ func buildLoggingMiddleware(conf AccessLoggerConfig, logQueue LogForwardingQueue
 		responseContentLength := max(c.Writer.Size(), 0)
 
 		// Shall we pass the body as well ? If so let's not dereference it !
-		if conf.BodyLogPolicy == LogAllBodies || conf.BodyLogPolicy == LogBodiesOnErrors && c.Writer.Status() >= 400 {
+		if conf.BodyLogPolicy == LOG_ALL_BODIES || conf.BodyLogPolicy == LOG_BODIES_ON_ERROR && c.Writer.Status() >= 400 {
 
 			// And parse all this to UTF-8 strings
-			requestBody = string(requestBodyLeech.GetLog())
+			requestBody = string(requestBodyLeech.data)
 			responseBody = string(responseBodyLeech.data)
 		}
 
@@ -112,24 +100,23 @@ func buildLoggingMiddleware(conf AccessLoggerConfig, logQueue LogForwardingQueue
 	}
 }
 
-// New returns an gin.HandlerFunc that will log our HTTP requests
-func New(conf AccessLoggerConfig) gin.HandlerFunc {
+func New(conf FluentdLoggerConfig) gin.HandlerFunc {
 	// Parse configuration, apply default arguments
 	// (Host and Port are mandatory)
 	if conf.BodyLogPolicy == 0 {
-		conf.BodyLogPolicy = LogNoBody
+		conf.BodyLogPolicy = LOG_NO_BODY
 	}
 
-	if conf.Path == "" {
-		conf.Path = "/gin.requests"
+	if conf.Tag == "" {
+		conf.Tag = "gin.requests"
 	}
 
 	if conf.DropSize == 0 {
-		conf.DropSize = 1024
+		conf.DropSize = 1000
 	}
 
 	if conf.MaxBodyLogSize == 0 {
-		conf.MaxBodyLogSize = 4096
+		conf.MaxBodyLogSize = 10000
 	}
 
 	if conf.RetryInterval == 0 {
@@ -137,12 +124,7 @@ func New(conf AccessLoggerConfig) gin.HandlerFunc {
 	}
 
 	// Apply configuration
-	var logQueue LogForwardingQueue
-	if len(conf.Host) > 0 && conf.Port != 0 {
-		logQueue = NewHTTPLogForwardingQueue(conf)
-	} else if conf.LogrusLogger != nil {
-		logQueue = NewLogrusLogForwardingQueue(conf)
-	}
+	logQueue := NewHttpLogForwardingQueue(conf)
 
 	// Run the log-forwarding goroutine
 	go logQueue.run()
