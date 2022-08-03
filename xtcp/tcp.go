@@ -55,17 +55,39 @@ func WithSndBuffer(buf int) Option {
 	}
 }
 
+func WithRecBuffer(buf int) Option {
+	return func(opt *connOption) {
+		opt.recBuffer = buf
+	}
+}
+
 func WithKeepAlive(ka bool) Option {
 	return func(opt *connOption) {
 		opt.keepAlive = ka
 	}
 }
 
-// TODO WithXXX
+func WithHBInterval(hbInterval time.Duration) Option {
+	return func(opt *connOption) {
+		opt.hbInterval = hbInterval
+	}
+}
+
+func WithIn(in int) Option {
+	return func(opt *connOption) {
+		opt.in = make(chan *TCPProto, in)
+	}
+}
+
+func WithOut(out int) Option {
+	return func(opt *connOption) {
+		opt.out = make(chan *TCPProto, out)
+	}
+}
 
 type TCPConn interface {
-	Send([]byte) error
-	Receive([]byte) error
+	Send(msg *TCPProto) error
+	Receive() (*TCPProto, error)
 }
 
 func Open(addr string, num int, opts ...Option) error {
@@ -167,15 +189,16 @@ func (c *connOption) read() {
 	for {
 		// parse bytes
 		for sc.Scan() {
+			pk := sc.Bytes()
 			p := &TCPProto{}
-			err := p.Unpack(bytes.NewReader(sc.Bytes()))
+			err := p.Unpack(bytes.NewReader(pk))
 			if err != nil {
 				c.Close()
 				return
 			}
 
 			atomic.StoreInt64(&c.hbTime, time.Now().Unix())
-			if string(p.Body) == PONG {
+			if len(pk) == rawHeaderSize+heartSize && string(p.Body) == PONG {
 				continue
 			}
 			select {
