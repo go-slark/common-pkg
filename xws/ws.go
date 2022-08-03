@@ -166,7 +166,6 @@ func (c *connOption) write() {
 			_ = c.wsConn.SetWriteDeadline(time.Now().Add(c.wTime))
 			err := c.wsConn.WriteMessage(m.Type, m.Payload)
 			if err != nil {
-				c.Close()
 				return
 			}
 		case <-c.closing:
