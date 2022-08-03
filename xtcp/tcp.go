@@ -24,6 +24,8 @@ const (
 	verOffset    = headerOffset + headerSize
 )
 
+// import: 实现并没有将header中的所有字段都定义在TCPProto中，而是将有的字段如包长/头长直接写在了TCP流中
+
 type TCPProto struct {
 	Ver  [verSize]byte // v1.0
 	Body []byte
@@ -32,10 +34,16 @@ type TCPProto struct {
 func (p *TCPProto) Pack(w io.Writer) error {
 	var err error
 	packLen := rawHeaderSize + len(p.Body)
-	err = binary.Write(w, binary.BigEndian, uint32(packLen))
-	err = binary.Write(w, binary.BigEndian, uint16(rawHeaderSize))
-	err = binary.Write(w, binary.BigEndian, &p.Ver)
-	err = binary.Write(w, binary.BigEndian, &p.Body)
+	write := func(data interface{}) {
+		if err != nil {
+			return
+		}
+		err = binary.Write(w, binary.BigEndian, data)
+	}
+	write(uint32(packLen))
+	write(uint16(rawHeaderSize))
+	write(&p.Ver)
+	write(&p.Body)
 	return err
 }
 
