@@ -1,73 +1,231 @@
 package xtcp
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/binary"
 	"errors"
-	"io"
+	"net"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 const (
-	// max body size
-	maxBodySize = 1024
-
-	// size
-	packSize      = 4
-	headerSize    = 2
-	verSize       = 4
-	heartSize     = 4
-	rawHeaderSize = packSize + headerSize + verSize
-	maxPackSize   = maxBodySize + rawHeaderSize
-
-	// offset
-	packOffset   = 0
-	headerOffset = packOffset + packSize
-	verOffset    = headerOffset + headerSize
+	PING = "PING"
+	PONG = "PONG"
 )
 
-// import: 实现并没有将header中的所有字段都定义在TCPProto中，而是将有的字段如包长/头长直接写在了TCP流中
-
-type TCPProto struct {
-	Ver  [verSize]byte // v1.0
-	Body []byte
+type connOption struct {
+	tcpConn    *net.TCPConn
+	keepAlive  bool
+	sndBuffer  int
+	recBuffer  int
+	hbTime     int64
+	hbInterval time.Duration
+	in         chan *TCPProto
+	out        chan *TCPProto
+	isClosed   bool
+	closing    chan struct{}
+	sync.Mutex
 }
 
-func (p *TCPProto) Pack(w io.Writer) error {
-	var err error
-	packLen := rawHeaderSize + len(p.Body)
-	write := func(data interface{}) {
+func newTCPConn(opts ...Option) *connOption {
+	conn := &connOption{
+		keepAlive:  true,
+		sndBuffer:  1024,
+		recBuffer:  1024,
+		hbTime:     time.Now().Unix(),
+		hbInterval: 60,
+		in:         make(chan *TCPProto, 1000),
+		out:        make(chan *TCPProto, 1000),
+		closing:    make(chan struct{}, 1),
+	}
+	for _, opt := range opts {
+		opt(conn)
+	}
+	return conn
+}
+
+type Option func(opt *connOption)
+
+func WithSndBuffer(buf int) Option {
+	return func(opt *connOption) {
+		opt.sndBuffer = buf
+	}
+}
+
+func WithKeepAlive(ka bool) Option {
+	return func(opt *connOption) {
+		opt.keepAlive = ka
+	}
+}
+
+// TODO WithXXX
+
+type TCPConn interface {
+	Send([]byte) error
+	Receive([]byte) error
+}
+
+func Open(addr string, num int, opts ...Option) error {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	lis, err := net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < num; i++ {
+		go accept(lis, opts...)
+	}
+	return nil
+}
+
+func accept(lis *net.TCPListener, opts ...Option) {
+	for {
+		conn, err := lis.AcceptTCP()
 		if err != nil {
 			return
 		}
-		err = binary.Write(w, binary.BigEndian, data)
+		c := newTCPConn(opts...)
+		err = conn.SetKeepAlive(c.keepAlive)
+		if err != nil {
+			return
+		}
+		err = conn.SetReadBuffer(c.recBuffer)
+		if err != nil {
+			return
+		}
+		err = conn.SetWriteBuffer(c.sndBuffer)
+		if err != nil {
+			return
+		}
+
+		go c.serverTCP(conn)
 	}
-	write(uint32(packLen))
-	write(uint16(rawHeaderSize))
-	write(&p.Ver)
-	write(&p.Body)
+}
+
+func (c *connOption) serverTCP(conn *net.TCPConn) {
+	c.tcpConn = conn
+	go c.read()
+	go c.write()
+	go c.handleHB()
+}
+
+func (c *connOption) write() {
+	// pack
+	tk := time.NewTicker(time.Duration(c.hbInterval) * 4 / 5)
+	defer func() {
+		tk.Stop()
+		c.Close()
+	}()
+
+	for {
+		select {
+		case m := <-c.out:
+			err := m.Pack(c.tcpConn)
+			if err != nil {
+				return
+			}
+		case <-c.closing:
+			return
+		case <-tk.C:
+			p := &TCPProto{Ver: [4]byte{'v', '1', '.', '0'}}
+			err := p.PackHB(c.tcpConn)
+			if err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (c *connOption) read() {
+	// unpack
+	sc := bufio.NewScanner(c.tcpConn)
+	sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if atEOF {
+			return
+		}
+		packLen := len(data)
+		if packLen < rawHeaderSize {
+			return
+		}
+		if data[6] != 'v' {
+			return
+		}
+		var l uint32
+		_ = binary.Read(bytes.NewReader(data[:4]), binary.BigEndian, &l)
+		if l > uint32(packLen) {
+			return
+		}
+		return int(l), data[:l], nil
+	})
+	for {
+		// parse bytes
+		for sc.Scan() {
+			p := &TCPProto{}
+			err := p.Unpack(bytes.NewReader(sc.Bytes()))
+			if err != nil {
+				c.Close()
+				return
+			}
+
+			atomic.StoreInt64(&c.hbTime, time.Now().Unix())
+			if string(p.Body) == PONG {
+				continue
+			}
+			select {
+			case c.in <- p:
+			case <-c.closing:
+				return
+			}
+		}
+	}
+}
+
+func (c *connOption) handleHB() {
+	for {
+		ts := atomic.LoadInt64(&c.hbTime)
+		if time.Now().Unix()-ts > int64(c.hbInterval) {
+			c.Close()
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func (c *connOption) Close() {
+	_ = c.tcpConn.Close()
+	c.Lock()
+	defer c.Unlock()
+	if c.isClosed {
+		return
+	}
+	close(c.closing)
+	c.isClosed = true
+}
+
+// expose interface rewrite
+
+func (c *connOption) Send(m *TCPProto) error {
+	var err error
+	select {
+	case c.out <- m:
+	case <-c.closing:
+		err = errors.New("conn is closing")
+	}
 	return err
 }
 
-func (p *TCPProto) Unpack(r io.Reader) error {
-	var (
-		err       error
-		packLen   uint32
-		headerLen uint16
-	)
-	err = binary.Read(r, binary.BigEndian, &packLen)
-	if packLen > maxPackSize {
-		return errors.New("invalid package size")
+func (c *connOption) Receive() (*TCPProto, error) {
+	select {
+	case m := <-c.in:
+		return m, nil
+	case <-c.closing:
+		return nil, errors.New("conn is closing")
 	}
-	err = binary.Read(r, binary.BigEndian, &headerLen)
-	if headerLen != rawHeaderSize {
-		return errors.New("invalid header size")
-	}
-	err = binary.Read(r, binary.BigEndian, &p.Ver)
-	bodyLen := packLen - uint32(headerLen)
-	if bodyLen > 0 {
-		p.Body = make([]byte, bodyLen)
-		err = binary.Read(r, binary.BigEndian, &p.Body)
-	} else {
-		p.Body = nil
-	}
-	return err
 }
