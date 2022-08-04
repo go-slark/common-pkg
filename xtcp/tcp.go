@@ -193,8 +193,7 @@ func (c *connOption) read() {
 			p := &TCPProto{}
 			err := p.Unpack(bytes.NewReader(pk))
 			if err != nil {
-				c.Close()
-				return
+				break
 			}
 
 			atomic.StoreInt64(&c.hbTime, time.Now().Unix())
