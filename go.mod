@@ -24,6 +24,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/smallfish-root/eventhorizon v1.0.1
 	github.com/smallfish-root/gin-http-logger v1.1.0
+	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/xuri/excelize/v2 v2.6.0
 	go.etcd.io/etcd/client/v3 v3.5.4
 	go.mongodb.org/mongo-driver v1.10.0
@@ -75,6 +76,7 @@ require (
 	github.com/richardlehane/msoleps v1.0.1 // indirect
 	github.com/segmentio/kafka-go v0.4.25 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
