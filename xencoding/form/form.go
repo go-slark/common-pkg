@@ -16,20 +16,21 @@ const (
 func init() {
 	decoder := form.NewDecoder()
 	decoder.SetTagName("json")
-	xencoding.RegisterCodec(codec{
+	xencoding.RegisterCodec(&codec{
 		decoder: decoder,
 	})
 }
 
 type codec struct {
+	encoder *form.Encoder
 	decoder *form.Decoder
 }
 
-func (c codec) Marshal(v interface{}) ([]byte, error) {
+func (c *codec) Marshal(v interface{}) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (c codec) Unmarshal(data []byte, v interface{}) error {
+func (c *codec) Unmarshal(data []byte, v interface{}) error {
 	vs, err := url.ParseQuery(string(data))
 	if err != nil {
 		return err
@@ -51,6 +52,6 @@ func (c codec) Unmarshal(data []byte, v interface{}) error {
 	return c.decoder.Decode(v, vs)
 }
 
-func (codec) Name() string {
+func (*codec) Name() string {
 	return Name
 }
