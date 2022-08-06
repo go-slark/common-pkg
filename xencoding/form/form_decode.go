@@ -20,8 +20,8 @@ import (
 )
 
 func DecodeValues(msg proto.Message, values url.Values) error {
-	for key, values := range values {
-		if err := populateFieldValues(msg.ProtoReflect(), strings.Split(key, "."), values); err != nil {
+	for key, value := range values {
+		if err := populateFieldValues(msg.ProtoReflect(), strings.Split(key, "."), value); err != nil {
 			return err
 		}
 	}

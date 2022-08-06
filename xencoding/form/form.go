@@ -47,9 +47,9 @@ func (c *codec) Unmarshal(data []byte, v interface{}) error {
 		return DecodeValues(m, vs)
 	} else if m, ok := reflect.Indirect(reflect.ValueOf(v)).Interface().(proto.Message); ok {
 		return DecodeValues(m, vs)
+	} else {
+		return c.decoder.Decode(v, vs)
 	}
-
-	return c.decoder.Decode(v, vs)
 }
 
 func (*codec) Name() string {
