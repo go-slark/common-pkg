@@ -53,8 +53,8 @@ func Handle(fs ...handlerFunc) gin.HandlerFunc {
 	}
 }
 
-func JSON(code int, obj interface{}, err error) xrender.Render {
-	switch m := obj.(type) {
+func JSON(code int, obj *Response, err error) xrender.Render {
+	switch m := obj.Data.(type) {
 	case proto.Message:
 		r := xrender.ProtoJson{}
 		r.Code_ = code
