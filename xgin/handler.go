@@ -3,6 +3,7 @@ package xgin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/smallfish-root/common-pkg/xgin/xrender"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
 )
@@ -53,11 +54,20 @@ func Handle(fs ...handlerFunc) gin.HandlerFunc {
 }
 
 func JSON(code int, obj interface{}, err error) xrender.Render {
-	r := xrender.JSON{}
-	r.Code_ = code
-	r.Data = obj
-	r.Error.Update(err)
-	return r
+	switch m := obj.(type) {
+	case proto.Message:
+		r := xrender.ProtoJson{}
+		r.Code_ = code
+		r.Data = m
+		r.Error.Update(err)
+		return r
+	default:
+		r := xrender.JSON{}
+		r.Code_ = code
+		r.Data = obj
+		r.Error.Update(err)
+		return r
+	}
 }
 
 func String(code int, formant string, values ...interface{}) xrender.Render {
