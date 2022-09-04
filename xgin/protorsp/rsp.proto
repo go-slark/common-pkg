@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package rsp;
+
+option go_package = "./;rsp";
+
+import "google/protobuf/any.proto";
+
+message Response {
+  int64 code = 1;
+  string msg = 2;
+  google.protobuf.Any data = 3;
+}
+
+//cmd: protoc --go-grpc_out=. --go_out=. rsp.proto
+
+//cmd: protoc --go_out . --go_opt=paths=source_relative --go-grpc_out . --go-grpc_opt=paths=source_relative rsp.proto
