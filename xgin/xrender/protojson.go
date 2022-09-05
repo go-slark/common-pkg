@@ -1,6 +1,7 @@
 package xrender
 
 import (
+	"encoding/json"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"net/http"
@@ -26,6 +27,20 @@ func (r ProtoJson) Render(w http.ResponseWriter) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// TODO 适配proto json
+	var mp map[string]interface{}
+	err = json.Unmarshal(jsonBytes, &mp)
+	if err != nil {
+		return err
+	}
+	delete(mp["data"].(map[string]interface{}), "@type")
+	jsonBytes, err = json.Marshal(&mp)
+	if err != nil {
+		return err
+	}
+	// TODO 适配proto json
+
 	_, err = w.Write(jsonBytes)
 	if err != nil {
 		panic(err)
