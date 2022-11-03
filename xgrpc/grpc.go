@@ -3,10 +3,13 @@ package xgrpc
 import (
 	"context"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
@@ -47,7 +50,7 @@ func newGRPCClient(addr string) (*grpc.ClientConn, error) {
 			Timeout:             time.Second,
 			PermitWithoutStream: true,
 		}),
-		grpc.WithBlock(),
+		//grpc.WithBlock(),
 	}
 	c, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
@@ -56,7 +59,7 @@ func newGRPCClient(addr string) (*grpc.ClientConn, error) {
 	return c, nil
 }
 
-func NewGrpcClient(conf []*GRPCClientConf) []*grpc.ClientConn {
+func NewGRPCClient(conf []*GRPCClientConf) []*grpc.ClientConn {
 	clients := make([]*grpc.ClientConn, 0, len(conf))
 	once.Do(func() {
 		for _, c := range conf {
@@ -99,11 +102,24 @@ type GRPCServer struct {
 	healthServer *health.Server
 }
 
-func (s *Server) NewGrpcServer(conf *GRPCServerConf) (*GRPCServer, error) {
+func (s *Server) NewGRPCServer(conf *GRPCServerConf) (*GRPCServer, error) {
+	entry := logrus.NewEntry(logrus.StandardLogger())
+	opt := []grpc_logrus.Option{
+		grpc_logrus.WithLevels(func(code codes.Code) logrus.Level {
+			if code == codes.OK {
+				return logrus.InfoLevel
+			}
+			return logrus.ErrorLevel
+		}),
+		grpc_logrus.WithMessageProducer(grpc_logrus.DefaultMessageProducer),
+	}
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+		grpc.ChainUnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
-		)), grpc.KeepaliveParams(keepalive.ServerParameters{
+			grpc_logrus.UnaryServerInterceptor(entry, opt...),
+			grpc_logrus.PayloadUnaryServerInterceptor(entry, func(ctx context.Context, fullMethodName string, servingObject interface{}) bool { return true }),
+		), UnaryServerTimeout(3*time.Second)),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle:     15 * time.Second,
 			MaxConnectionAge:      30 * time.Second,
 			MaxConnectionAgeGrace: 5 * time.Second,
