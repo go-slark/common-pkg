@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"io/ioutil"
 	"strings"
 )
@@ -73,14 +74,14 @@ func GetIndex(index []string) ([]byte, error) {
 
 // create doc
 
-func Create(index, ID string, doc interface{}) ([]byte, error) {
+func Create(index, ID, docType string, doc interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(doc)
 	if err != nil {
 		return nil, err
 	}
 
-	rsp, err := client.Create(index, ID, buf)
+	rsp, err := client.Create(index, ID, buf, client.Create.WithDocumentType(docType))
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func Create(index, ID string, doc interface{}) ([]byte, error) {
 
 // create / update index (if index not exist, create index and doc, create: id default nil)
 
-func Index(index string, doc interface{}, ID ...string) ([]byte, error) {
+func Index(index, docType string, doc interface{}, ID ...string) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(doc)
 	if err != nil {
@@ -100,7 +101,12 @@ func Index(index string, doc interface{}, ID ...string) ([]byte, error) {
 	if len(ID) != 0 {
 		id = ID[0]
 	}
-	rsp, err := client.Index(index, buf, client.Index.WithDocumentID(id))
+
+	opt := []func(*esapi.IndexRequest){
+		client.Index.WithDocumentID(id),
+		client.Index.WithDocumentType(docType),
+	}
+	rsp, err := client.Index(index, buf, opt...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +116,7 @@ func Index(index string, doc interface{}, ID ...string) ([]byte, error) {
 
 // bulk create doc
 
-func CreateBulk(index string, docs ...interface{}) ([]byte, error) {
+func CreateBulk(index, docType string, docs ...interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	for _, doc := range docs {
 		meta := []byte(fmt.Sprintf(`{ "index" : { "_id" : "%s" } }%s`, "id", "\n")) // TODO
@@ -124,7 +130,11 @@ func CreateBulk(index string, docs ...interface{}) ([]byte, error) {
 		buf.Write(data)
 	}
 
-	rsp, err := client.Bulk(buf, client.Bulk.WithIndex(index))
+	opt := []func(*esapi.BulkRequest){
+		client.Bulk.WithIndex(index),
+		client.Bulk.WithDocumentType(docType),
+	}
+	rsp, err := client.Bulk(buf, opt...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,13 +144,13 @@ func CreateBulk(index string, docs ...interface{}) ([]byte, error) {
 
 // update doc
 
-func Update(index, ID string, doc interface{}) ([]byte, error) {
+func Update(index, docType, ID string, doc interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(doc)
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := client.Update(index, ID, buf, client.Update.WithDocumentType("doc"))
+	rsp, err := client.Update(index, ID, buf, client.Update.WithDocumentType(docType))
 	if err != nil {
 		return nil, err
 	}
@@ -150,16 +160,19 @@ func Update(index, ID string, doc interface{}) ([]byte, error) {
 
 // update by condition
 
-func UpdateByQuery(index []string, query interface{}) ([]byte, error) {
+func UpdateByQuery(index []string, docType string, query interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(query)
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := client.UpdateByQuery(index, client.UpdateByQuery.WithDocumentType("doc"),
+	opt := []func(*esapi.UpdateByQueryRequest){
+		client.UpdateByQuery.WithDocumentType(docType),
 		client.UpdateByQuery.WithBody(buf),
 		client.UpdateByQuery.WithContext(context.Background()),
-		client.UpdateByQuery.WithPretty())
+		client.UpdateByQuery.WithPretty(),
+	}
+	rsp, err := client.UpdateByQuery(index, opt...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,8 +182,8 @@ func UpdateByQuery(index []string, query interface{}) ([]byte, error) {
 
 // delete doc
 
-func Delete(index, ID string) ([]byte, error) {
-	rsp, err := client.Delete(index, ID)
+func Delete(index, docType, ID string) ([]byte, error) {
+	rsp, err := client.Delete(index, ID, client.Delete.WithDocumentType(docType))
 	if err != nil {
 		return nil, err
 	}
@@ -178,14 +191,18 @@ func Delete(index, ID string) ([]byte, error) {
 	return ioutil.ReadAll(rsp.Body)
 }
 
-func DeleteBulk(index string, ids []string) ([]byte, error) {
+func DeleteBulk(index, docType string, ids []string) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	for _, id := range ids {
 		meta := []byte(fmt.Sprintf(`{ "delete" : { "_id" : "%s" } }%s`, id, "\n"))
 		buf.Grow(len(meta))
 		buf.Write(meta)
 	}
-	rsp, err := client.Bulk(buf, client.Bulk.WithIndex(index))
+	opt := []func(*esapi.BulkRequest){
+		client.Bulk.WithIndex(index),
+		client.Bulk.WithDocumentType(docType),
+	}
+	rsp, err := client.Bulk(buf, opt...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,13 +210,13 @@ func DeleteBulk(index string, ids []string) ([]byte, error) {
 	return ioutil.ReadAll(rsp.Body)
 }
 
-func DeleteByQuery(index []string, query interface{}) ([]byte, error) {
+func DeleteByQuery(index []string, query interface{}, docType ...string) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(query)
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := client.DeleteByQuery(index, buf)
+	rsp, err := client.DeleteByQuery(index, buf, client.DeleteByQuery.WithDocumentType(docType...))
 	if err != nil {
 		return nil, err
 	}
@@ -209,8 +226,8 @@ func DeleteByQuery(index []string, query interface{}) ([]byte, error) {
 
 // query doc
 
-func Get(index, ID string) ([]byte, error) {
-	rsp, err := client.Get(index, ID)
+func Get(index, docType, ID string) ([]byte, error) {
+	rsp, err := client.Get(index, ID, client.Get.WithDocumentType(docType))
 	if err != nil {
 		return nil, err
 	}
@@ -218,19 +235,39 @@ func Get(index, ID string) ([]byte, error) {
 	return ioutil.ReadAll(rsp.Body)
 }
 
-func Search(index string, query interface{}) ([]byte, error) {
+func Search(index, docType string, query interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(query)
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := client.Search(
+	opt := []func(*esapi.SearchRequest){
 		client.Search.WithContext(context.Background()),
 		client.Search.WithIndex(index),
+		client.Search.WithDocumentType(docType),
 		client.Search.WithBody(buf),
 		client.Search.WithTrackTotalHits(true),
 		client.Search.WithPretty(),
-	)
+		//client.Search.WithFrom(0),
+		//client.Search.WithSize(10),
+		//client.Search.WithSort("time:desc"),
+	}
+	rsp, err := client.Search(opt...)
+	if err != nil {
+		return nil, err
+	}
+	defer rsp.Body.Close()
+	return ioutil.ReadAll(rsp.Body)
+}
+
+// count
+
+func Count(index, docType []string) ([]byte, error) {
+	opt := []func(*esapi.CountRequest){
+		client.Count.WithIndex(index...),
+		client.Count.WithDocumentType(docType...),
+	}
+	rsp, err := client.Count(opt...)
 	if err != nil {
 		return nil, err
 	}
