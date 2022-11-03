@@ -298,8 +298,8 @@ github.com/sirupsen/logrus
 github.com/smallfish-root/eventhorizon
 github.com/smallfish-root/eventhorizon/commandhandler/bus
 github.com/smallfish-root/eventhorizon/eventbus/kafka
-# github.com/smallfish-root/gin-http-logger v1.1.0
-## explicit
+# github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
+## explicit; go 1.12
 github.com/smallfish-root/gin-http-logger
 # github.com/ugorji/go/codec v1.2.7
 ## explicit; go 1.11

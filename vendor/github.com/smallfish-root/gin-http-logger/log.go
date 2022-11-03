@@ -18,38 +18,37 @@ type Log struct {
 	responseContentLength int64
 }
 
-// Format of a Request body and it's metadata
-type HttpContent struct {
+// HTTPContent describes the format of a Request body and it's metadata
+type HTTPContent struct {
 	Size     int64  `json:"size"`
-	MimeType string `json:"mime_type"`
-	Content  string `json:"content"`
+	MimeType string `json:"mime_type,omitempty"`
+	Content  string `json:"value,omitempty"`
 }
 
-// Request log format
+// RequestLogEntry describes the incoming requests log format
 type RequestLogEntry struct {
 	Method      string            `json:"method"`
-	Path        string            `json:"path"`
+	URI         string            `json:"uri"`
 	HTTPVersion string            `json:"http_version"`
 	Headers     map[string]string `json:"headers"`
 	HeaderSize  int               `json:"headers_size"`
-	Content     HttpContent       `json:"content"`
+	Content     HTTPContent       `json:"content"`
 }
 
-// Response log format
+// ResponseLogEntry describes the server response log format
 type ResponseLogEntry struct {
-	Status     int               `json:"status"`
-	Headers    map[string]string `json:"headers"`
+	Status     int               `json:"status,omitempty"`
+	Headers    map[string]string `json:"headers,omitempty"`
 	HeaderSize int               `json:"headers_size"`
-	Content    HttpContent       `json:"content"`
+	Content    HTTPContent       `json:"content"`
 }
 
-// Log format for the whole request
-type FluentdLogLine struct {
-	Env           string           `json:"fluentd_env"`
-	TimeStarted   string           `json:"@timestamp"`
-	ClientAddress string           `json:"x_client_address"`
+// AccessLog describes the complete log entry format
+type AccessLog struct {
+	TimeStarted   string           `json:"start_time"`
+	ClientAddress string           `json:"x_client_address,omitempty"`
 	Time          int64            `json:"duration"`
 	Request       RequestLogEntry  `json:"request"`
 	Response      ResponseLogEntry `json:"response"`
-	Errors        string           `json:"errors"`
+	Errors        string           `json:"errors,omitempty"`
 }

@@ -1,6 +1,7 @@
 package xgin
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/smallfish-root/common-pkg/xgin/xrender"
 	"google.golang.org/protobuf/proto"
@@ -15,10 +16,27 @@ type handlerFunc func(*gin.Context) error
 func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Header(requestId, GetRequestId(ctx))
+		var r xrender.Render
+		defer func() {
+			b, ok := r.(xrender.JSON)
+			if !ok {
+				return
+			}
+			rsp, ok := b.Data.(*Response)
+			if !ok {
+				return
+			}
+			v, _ := json.Marshal(&Response{
+				Code: rsp.Code,
+				Msg:  rsp.Msg,
+				Data: nil,
+			})
+			ctx.Header(SimpleRsp, string(v))
+		}()
 		for _, f := range fs {
 			err := f(ctx)
 			if err != nil {
-				r := Error(err)
+				r = Error(err)
 				ctx.Render(r.Code(), r)
 				ctx.Abort()
 				_ = ctx.Error(err)
@@ -26,7 +44,7 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 			}
 		}
 
-		r := fn(ctx)
+		r = fn(ctx)
 		if r == nil {
 			return
 		}

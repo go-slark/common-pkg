@@ -23,7 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/smallfish-root/eventhorizon v1.0.1
-	github.com/smallfish-root/gin-http-logger v1.1.0
+	github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/xuri/excelize/v2 v2.6.0
 	go.etcd.io/etcd/client/v3 v3.5.4
