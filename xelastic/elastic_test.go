@@ -51,6 +51,14 @@ func TestES(t *testing.T) {
 		return
 	}
 	fmt.Printf("search result:%+v\n", rp)
+
+	// count
+	rc, err := Count([]string{"city_index11"}, []string{"doc"})
+	if err != nil {
+		fmt.Println("count err:", err)
+		return
+	}
+	fmt.Println("count:", string(rc))
 }
 
 type response struct {

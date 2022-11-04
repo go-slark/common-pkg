@@ -239,6 +239,8 @@ func Get(index, docType, ID string) ([]byte, error) {
 	return ioutil.ReadAll(rsp.Body)
 }
 
+// search 返回的hit total每次可能不同(不准确)
+
 func Search(index, docType string, query interface{}) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(query)
@@ -254,7 +256,7 @@ func Search(index, docType string, query interface{}) ([]byte, error) {
 		client.Search.WithPretty(),
 		//client.Search.WithFrom(0),
 		//client.Search.WithSize(3),
-		//client.Search.WithSort("_id:desc"),
+		//client.Search.WithSort([]string{"_source:{name:desc}", "_score:asc", "_id:desc"}...), // 多字段排序
 	}
 	rsp, err := client.Search(opt...)
 	if err != nil {
@@ -264,7 +266,7 @@ func Search(index, docType string, query interface{}) ([]byte, error) {
 	return ioutil.ReadAll(rsp.Body)
 }
 
-// count
+// count(返回总数准确)
 
 func Count(index, docType []string) ([]byte, error) {
 	opt := []func(*esapi.CountRequest){
