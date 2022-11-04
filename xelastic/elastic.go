@@ -114,12 +114,16 @@ func Index(index, docType string, doc interface{}, ID ...string) ([]byte, error)
 	return ioutil.ReadAll(rsp.Body)
 }
 
-// bulk create doc
+// bulk create / update / index doc
 
-func CreateBulk(index, docType string, docs ...interface{}) ([]byte, error) {
+func Bulk(index, docType string, docs []interface{}) ([]byte, error) {
+	if len(docs) == 0 {
+		return nil, nil
+	}
 	buf := &bytes.Buffer{}
 	for _, doc := range docs {
-		meta := []byte(fmt.Sprintf(`{ "index" : { "_id" : "%s" } }%s`, "id", "\n")) // TODO
+		//meta := []byte(fmt.Sprintf(`{ "index" : { "_id" : "%s" } }%s`, "id", "\n")) // 批量操作指定_id(_id存在则更新)
+		meta := []byte(fmt.Sprintf(`{ "index" : {} }%s`, "\n"))
 		data, err := json.Marshal(doc)
 		if err != nil {
 			return nil, err
@@ -249,8 +253,8 @@ func Search(index, docType string, query interface{}) ([]byte, error) {
 		client.Search.WithTrackTotalHits(true),
 		client.Search.WithPretty(),
 		//client.Search.WithFrom(0),
-		//client.Search.WithSize(10),
-		//client.Search.WithSort("time:desc"),
+		//client.Search.WithSize(3),
+		//client.Search.WithSort("_id:desc"),
 	}
 	rsp, err := client.Search(opt...)
 	if err != nil {
