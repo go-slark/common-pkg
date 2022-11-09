@@ -166,7 +166,8 @@ func (c *connOption) write() {
 			_ = c.wsConn.SetWriteDeadline(time.Now().Add(c.wTime))
 			err := c.wsConn.WriteMessage(m.Type, m.Payload)
 			if err != nil {
-				return
+				// TODO
+				//return
 			}
 		case <-c.closing:
 			return
@@ -174,7 +175,8 @@ func (c *connOption) write() {
 			_ = c.wsConn.SetWriteDeadline(time.Now().Add(c.wTime))
 			err := c.wsConn.WriteMessage(websocket.PingMessage, nil)
 			if err != nil {
-				return
+				// TODO
+				//return
 			}
 		}
 	}
