@@ -4,12 +4,15 @@ import (
 	"errors"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 type connOption struct {
+	id         string
+	context    interface{}
 	wsConn     *websocket.Conn
 	in         chan *Msg
 	out        chan *Msg
@@ -123,6 +126,7 @@ func (c *connOption) Init(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	c.wsConn = ws
+	c.id = newID()
 	go c.read()
 	go c.write()
 	go c.handleHB()
@@ -227,4 +231,23 @@ func (c *connOption) Close() {
 	}
 	close(c.closing)
 	c.isClosed = true
+}
+
+func (c *connOption) SetContext(ctx interface{}) {
+	c.context = ctx
+}
+
+func (c *connOption) Context() interface{} {
+	return c.context
+}
+
+func (c *connOption) ID() string {
+	return c.id
+}
+
+var connID uint64
+
+func newID() string {
+	id := atomic.AddUint64(&connID, 1)
+	return strconv.FormatUint(id, 36)
 }
