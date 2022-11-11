@@ -35,10 +35,10 @@ func NewWSConn(opts ...Option) *connOption {
 		closing:    make(chan struct{}, 1),
 		rBuffer:    1024,
 		wBuffer:    1024,
-		hbInterval: 60,
+		hbInterval: 15 * time.Second,
 		hbTime:     time.Now().Unix(),
-		wTime:      10,
-		hsTime:     3,
+		wTime:      10 * time.Second,
+		hsTime:     3 * time.Second,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -102,6 +102,9 @@ type Msg struct {
 }
 
 type WSConn interface {
+	ID() string
+	Context() interface{}
+	SetContext(ctx interface{})
 	Close()
 	Receive() (*Msg, error)
 	Send(m *Msg) error
@@ -158,7 +161,7 @@ func (c *connOption) read() {
 }
 
 func (c *connOption) write() {
-	tk := time.NewTicker(time.Duration(c.hbInterval) * 4 / 5)
+	tk := time.NewTicker(c.hbInterval * 4 / 5)
 	defer func() {
 		tk.Stop()
 		c.Close()
