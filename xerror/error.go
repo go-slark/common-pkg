@@ -94,6 +94,12 @@ func (e *customError) WithSurplus(surplus interface{}) *customError {
 	return err
 }
 
+func (e *customError) WithMessage(msg string) *customError {
+	err := clone(e)
+	err.Message = msg
+	return err
+}
+
 func (e *customError) GRPCStatus() *status.Status {
 	eInfo := &errdetails.ErrorInfo{
 		Reason: e.Reason,
