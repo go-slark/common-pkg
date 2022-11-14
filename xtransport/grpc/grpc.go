@@ -12,15 +12,15 @@ type RegisterObj struct {
 	Register func(s *grpc.Server, obj interface{})
 }
 
-func (r *RegisterObj) NewGRPCServer() *Server {
-	srv := NewServer()
+func (r *RegisterObj) NewGRPCServer(opts ...ServerOption) *Server {
+	srv := NewServer(opts...)
 	r.Register(srv.Server, r.Obj)
 	return srv
 }
 
 // GRPC Client
 
-type ClientGRPC struct {
+type GRPCClient struct {
 	clients map[string]*Client
 }
 
@@ -29,7 +29,7 @@ type ClientObj struct {
 	Addr string
 }
 
-func NewGRPCClient(objs []*ClientObj, opts ...ClientOption) *ClientGRPC {
+func NewGRPCClient(objs []*ClientObj, opts ...ClientOption) *GRPCClient {
 	clients := make(map[string]*Client, len(objs))
 	for _, obj := range objs {
 		client := NewClient(append(append([]ClientOption{}, WithAddr(obj.Addr)), opts...)...)
@@ -38,14 +38,14 @@ func NewGRPCClient(objs []*ClientObj, opts ...ClientOption) *ClientGRPC {
 		}
 		clients[obj.Name] = client
 	}
-	return &ClientGRPC{clients: clients}
+	return &GRPCClient{clients: clients}
 }
 
-func (c *ClientGRPC) GetGRPCClient(name string) *Client {
+func (c *GRPCClient) GetGRPCClient(name string) *Client {
 	return c.clients[name]
 }
 
-func (c *ClientGRPC) Stop() {
+func (c *GRPCClient) Stop() {
 	for _, client := range c.clients {
 		_ = client.Stop()
 	}
