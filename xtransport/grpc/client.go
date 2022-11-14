@@ -4,12 +4,19 @@ import (
 	"context"
 	"google.golang.org/grpc"
 	"net"
+	"time"
 )
+
+type ctx struct {
+	tm time.Duration
+	c  context.Context
+	f  context.CancelFunc
+}
 
 type Client struct {
 	*grpc.ClientConn
 	listener net.Listener
-	ctx      context.Context
+	ctx      ctx
 	err      error
 	address  string
 	opts     []grpc.DialOption
@@ -19,11 +26,16 @@ type Client struct {
 
 func NewClient(opts ...ClientOption) *Client {
 	cli := &Client{
-		ctx:     context.TODO(),
+		ctx:     ctx{c: context.TODO(), f: nil, tm: 0},
 		address: "0.0.0.0:0",
 	}
 	for _, o := range opts {
 		o(cli)
+	}
+
+	if cli.ctx.tm != 0 {
+		cli.ctx.c, cli.ctx.f = context.WithTimeout(context.Background(), cli.ctx.tm)
+		defer cli.ctx.f()
 	}
 
 	var grpcOpts []grpc.DialOption
@@ -37,7 +49,7 @@ func NewClient(opts ...ClientOption) *Client {
 		grpcOpts = append(grpcOpts, cli.opts...)
 	}
 
-	conn, err := grpc.DialContext(cli.ctx, cli.address, cli.opts...)
+	conn, err := grpc.DialContext(cli.ctx.c, cli.address, cli.opts...)
 	cli.err = err
 	cli.ClientConn = conn
 	return cli
@@ -61,8 +73,8 @@ func WithAddr(addr string) ClientOption {
 	}
 }
 
-func WithContext(ctx context.Context) ClientOption {
+func WithTimeout(tm time.Duration) ClientOption {
 	return func(client *Client) {
-		client.ctx = ctx
+		client.ctx.tm = tm
 	}
 }
