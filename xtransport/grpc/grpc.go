@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	"github.com/smallfish-root/common-pkg/xencoding"
 	"google.golang.org/grpc"
 	"os"
 )
@@ -30,18 +29,12 @@ type ClientObj struct {
 	Addr string
 }
 
-func NewGRPCClient(objs []*ClientObj, opts []ClientOption) *GRPCClient {
+type DialOption func() []grpc.DialOption
+
+func NewGRPCClient(objs []*ClientObj, f DialOption) *GRPCClient {
 	clients := make(map[string]*Client, len(objs))
-	optsNum := len(opts)
 	for _, obj := range objs {
-		dstOpts := make([]ClientOption, 0, optsNum)
-		if optsNum != 0 {
-			err := xencoding.DeepCopy(dstOpts, opts)
-			if err != nil {
-				panic(err)
-			}
-		}
-		client := NewClient(append(append([]ClientOption{}, WithAddr(obj.Addr)), dstOpts...)...)
+		client := NewClient(append(append([]ClientOption{}, WithAddr(obj.Addr)), ClientOptions(f()...))...)
 		if client.err != nil {
 			os.Exit(800)
 		}
