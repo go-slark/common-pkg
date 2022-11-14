@@ -49,7 +49,7 @@ func NewClient(opts ...ClientOption) *Client {
 		grpcOpts = append(grpcOpts, cli.opts...)
 	}
 
-	conn, err := grpc.DialContext(cli.ctx.c, cli.address, cli.opts...)
+	conn, err := grpc.DialContext(cli.ctx.c, cli.address, grpcOpts...)
 	cli.err = err
 	cli.ClientConn = conn
 	return cli
@@ -61,7 +61,7 @@ func (c *Client) Stop() error {
 
 type ClientOption func(*Client)
 
-func ClientOptions(opts ...grpc.DialOption) ClientOption {
+func ClientOptions(opts []grpc.DialOption) ClientOption {
 	return func(client *Client) {
 		client.opts = opts
 	}
@@ -76,5 +76,17 @@ func WithAddr(addr string) ClientOption {
 func WithTimeout(tm time.Duration) ClientOption {
 	return func(client *Client) {
 		client.ctx.tm = tm
+	}
+}
+
+func WithUnaryInterceptor(unary []grpc.UnaryClientInterceptor) ClientOption {
+	return func(client *Client) {
+		client.unary = unary
+	}
+}
+
+func WithStreamInterceptor(stream []grpc.StreamClientInterceptor) ClientOption {
+	return func(client *Client) {
+		client.stream = stream
 	}
 }

@@ -90,13 +90,19 @@ func Listener(l net.Listener) ServerOption {
 	}
 }
 
-func UnaryInterceptor(u ...grpc.UnaryServerInterceptor) ServerOption {
+func UnaryInterceptor(u []grpc.UnaryServerInterceptor) ServerOption {
 	return func(s *Server) {
 		s.unary = u
 	}
 }
 
-func ServerOptions(opts ...grpc.ServerOption) ServerOption {
+func StreamInterceptor(s []grpc.StreamServerInterceptor) ServerOption {
+	return func(server *Server) {
+		server.stream = s
+	}
+}
+
+func ServerOptions(opts []grpc.ServerOption) ServerOption {
 	return func(s *Server) {
 		s.opts = opts
 	}
