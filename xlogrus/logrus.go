@@ -93,7 +93,7 @@ func (l *logger) Levels() []logrus.Level {
 
 func (l *logger) Fire(entry *logrus.Entry) error {
 	ctx := entry.Context
-	entry.Data["X-Request-ID"] = ctx.Value("X-Request-ID")
+	entry.WithField("X-Request-ID", ctx.Value("X-Request-ID"))
 
 	// 日志统一分发 es mongo kafka
 	for _, dispatcher := range l.dispatcher {
