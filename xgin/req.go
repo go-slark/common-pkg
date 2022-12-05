@@ -1,8 +1,10 @@
 package xgin
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 var requestId string
@@ -45,6 +47,7 @@ func BuildRequestId(opts ...Option) gin.HandlerFunc {
 		}
 		requestId = cfg.requestId
 		ctx.Header(cfg.requestId, rid)
+		logrus.WithContext(context.WithValue(context.Background(), cfg.requestId, requestId))
 	}
 }
 

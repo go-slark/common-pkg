@@ -15,7 +15,6 @@ type handlerFunc func(*gin.Context) error
 
 func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Header(requestId, GetRequestId(ctx))
 		var r xrender.Render
 		defer func() {
 			b, ok := r.(xrender.JSON)
