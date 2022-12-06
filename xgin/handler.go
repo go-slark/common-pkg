@@ -41,14 +41,14 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 			if !ok {
 				break
 			}
-			rsp.TraceID = ctx.Value(xutils.TraceID)
+			rsp.TraceID = ctx.Request.Context().Value(xutils.TraceID)
 		case *xrender.ProtoJson:
 			render := r.(*xrender.ProtoJson)
 			rsp := render.Data
 			if rsp == nil {
 				break
 			}
-			rsp.TraceID = ctx.Value(xutils.TraceID)
+			rsp.TraceID = ctx.Request.Context().Value(xutils.TraceID)
 		}
 		ctx.Render(r.Code(), r)
 	}
