@@ -3,6 +3,7 @@ package xlogrus
 import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/smallfish-root/common-pkg/xutils"
 	"io"
 	"os"
 )
@@ -81,7 +82,6 @@ func NewLogger(opts ...funcOpts) *logrus.Logger {
 	stdLogger := logrus.StandardLogger()
 	stdLogger.SetFormatter(l.formatter)
 	stdLogger.SetLevel(l.level)
-	//logger.SetOutput(io.MultiWriter([]io.Writer{os.Stdout}...))
 	stdLogger.SetOutput(l.writer)
 	stdLogger.AddHook(l)
 	return stdLogger
@@ -93,7 +93,11 @@ func (l *logger) Levels() []logrus.Level {
 
 func (l *logger) Fire(entry *logrus.Entry) error {
 	ctx := entry.Context
-	entry.WithField("X-Request-ID", ctx.Value("X-Request-ID"))
+	if ctx == nil {
+		return nil
+	}
+	entry.Data[xutils.TraceID] = ctx.Value(xutils.TraceID)
+	entry.Data[xutils.ServerName] = l.srvName
 
 	// 日志统一分发 es mongo kafka
 	for _, dispatcher := range l.dispatcher {

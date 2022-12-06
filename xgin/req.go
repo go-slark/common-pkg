@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
+	"github.com/smallfish-root/common-pkg/xutils"
 )
 
 var requestId string
@@ -33,7 +33,7 @@ func BuildRequestId(opts ...Option) gin.HandlerFunc {
 		builder: func() string {
 			return uuid.New().String()
 		},
-		requestId: "X-Request-ID",
+		requestId: xutils.TraceID,
 	}
 
 	for _, opt := range opts {
@@ -47,7 +47,7 @@ func BuildRequestId(opts ...Option) gin.HandlerFunc {
 		}
 		requestId = cfg.requestId
 		ctx.Header(cfg.requestId, rid)
-		logrus.WithContext(context.WithValue(context.Background(), cfg.requestId, requestId))
+		ctx.Request = ctx.Request.WithContext(context.WithValue(context.Background(), cfg.requestId, rid))
 	}
 }
 

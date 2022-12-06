@@ -45,3 +45,8 @@ func (bm BodyMap) JsonBody() (jb string) {
 	jb = string(bs)
 	return jb
 }
+
+const (
+	ServerName = "Server-Name"
+	TraceID    = "X-Request-ID"
+)

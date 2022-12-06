@@ -8,6 +8,7 @@ import (
 
 type ProtoJson struct {
 	HttpCode
+	Trace
 	Error
 	Data proto.Message
 }

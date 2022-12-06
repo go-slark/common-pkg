@@ -27,3 +27,7 @@ func (e Error) Err() error {
 func (e *Error) Update(err error) {
 	e.error = err
 }
+
+type Trace struct {
+	TraceID interface{} `json:"trace_id"`
+}

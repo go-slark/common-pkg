@@ -6,14 +6,15 @@ import (
 	httpLogger "github.com/smallfish-root/gin-http-logger"
 )
 
+//logger := logrus.New()
+//logger.SetLevel(logrus.DebugLevel)
+//formatter := &logrus.JSONFormatter{
+//	TimestampFormat: "2006-01-02 15:04:05.000",
+//}
+//logger.SetFormatter(formatter)
+//logger.SetOutput(io.MultiWriter([]io.Writer{os.Stdout}...))
+
 func ErrLogger() gin.HandlerFunc {
-	//logger := logrus.New()
-	//logger.SetLevel(logrus.DebugLevel)
-	//formatter := &logrus.JSONFormatter{
-	//	TimestampFormat: "2006-01-02 15:04:05.000",
-	//}
-	//logger.SetFormatter(formatter)
-	//logger.SetOutput(io.MultiWriter([]io.Writer{os.Stdout}...))
 	return func(ctx *gin.Context) {
 		ctx.Next()
 		for _, err := range ctx.Errors {
@@ -26,13 +27,6 @@ func ErrLogger() gin.HandlerFunc {
 }
 
 func Logger(excludePaths ...string) gin.HandlerFunc {
-	//logger := logrus.New()
-	//logger.SetLevel(logrus.DebugLevel)
-	//formatter := &logrus.JSONFormatter{
-	//	TimestampFormat: "2006-01-02 15:04:05.000",
-	//}
-	//logger.SetFormatter(formatter)
-	//logger.SetOutput(io.MultiWriter([]io.Writer{os.Stdout}...))
 	l := httpLogger.AccessLoggerConfig{
 		//LogrusLogger:   logger,
 		LogrusLogger:   logrus.StandardLogger(),
