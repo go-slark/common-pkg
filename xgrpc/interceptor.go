@@ -2,12 +2,17 @@ package xgrpc
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"github.com/smallfish-root/common-pkg/xutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"sync"
 	"time"
 )
+
+// client interceptor
 
 func UnaryClientTimeout(defaultTime time.Duration) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
@@ -22,6 +27,25 @@ func UnaryClientTimeout(defaultTime time.Duration) grpc.UnaryClientInterceptor {
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
+
+func UnaryClientTraceIDInterceptor() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, resp interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		value := ctx.Value(xutils.TraceID)
+		requestID, ok := value.(string)
+		if !ok || len(requestID) == 0 {
+			requestID = uuid.New().String()
+		}
+
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if !ok {
+			md = metadata.Pairs()
+		}
+		md[xutils.TraceID] = []string{requestID}
+		return invoker(metadata.NewOutgoingContext(ctx, md), method, req, resp, cc, opts...)
+	}
+}
+
+// server interceptor
 
 func UnaryServerTimeout(timeout time.Duration) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -66,5 +90,23 @@ func UnaryServerTimeout(timeout time.Duration) grpc.UnaryServerInterceptor {
 			}
 			return nil, err
 		}
+	}
+}
+
+func UnaryServerTracIDInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			md = metadata.Pairs()
+		}
+
+		requestID := md[xutils.TraceID]
+		if len(requestID) > 0 {
+			ctx = context.WithValue(ctx, xutils.TraceID, requestID[0])
+			return handler(ctx, req)
+		}
+
+		ctx = context.WithValue(ctx, xutils.TraceID, uuid.New().String())
+		return handler(ctx, req)
 	}
 }
