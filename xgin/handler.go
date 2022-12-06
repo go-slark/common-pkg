@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/smallfish-root/common-pkg/xgin/xrender"
 	"github.com/smallfish-root/common-pkg/xutils"
-	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
 )
@@ -36,12 +35,20 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 			_ = ctx.Error(err)
 		}
 		switch r.(type) {
-		case xrender.JSON:
+		case *xrender.JSON:
 			render := r.(*xrender.JSON)
-			render.TraceID = ctx.Value(xutils.TraceID)
-		case xrender.ProtoJson:
+			rsp, ok := render.Data.(*Response)
+			if !ok {
+				break
+			}
+			rsp.TraceID = ctx.Value(xutils.TraceID)
+		case *xrender.ProtoJson:
 			render := r.(*xrender.ProtoJson)
-			render.TraceID = ctx.Value(xutils.TraceID)
+			rsp := render.Data
+			if rsp == nil {
+				break
+			}
+			rsp.TraceID = ctx.Value(xutils.TraceID)
 		}
 		ctx.Render(r.Code(), r)
 	}
@@ -62,12 +69,12 @@ func Handle(fs ...handlerFunc) gin.HandlerFunc {
 	}
 }
 
-func JSON(code int, obj *Response, err error) xrender.Render {
-	switch m := obj.Data.(type) {
-	case proto.Message:
+func JSON(code int, obj interface{}, err error) xrender.Render {
+	switch data := obj.(type) {
+	case *xrender.ProtoResponse:
 		r := &xrender.ProtoJson{}
 		r.Code_ = code
-		r.Data = m
+		r.Data = data
 		r.Error.Update(err)
 		return r
 	default:

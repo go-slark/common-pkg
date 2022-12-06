@@ -8,9 +8,15 @@ import (
 
 type ProtoJson struct {
 	HttpCode
-	Trace
 	Error
-	Data proto.Message
+	Data *ProtoResponse
+}
+
+type ProtoResponse struct {
+	Code    int
+	TraceID interface{}
+	Msg     string
+	proto.Message
 }
 
 var MarshalOptions = protojson.MarshalOptions{
