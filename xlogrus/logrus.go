@@ -9,12 +9,12 @@ import (
 )
 
 type logger struct {
-	srvName    string
-	level      logrus.Level
-	levels     []logrus.Level
-	formatter  logrus.Formatter
-	writer     io.Writer
-	dispatcher []func()
+	srvName   string
+	level     logrus.Level
+	levels    []logrus.Level
+	formatter logrus.Formatter
+	writer    io.Writer
+	writers   map[logrus.Level]io.Writer
 }
 
 type funcOpts func(*logger)
@@ -61,20 +61,33 @@ func WithWriter(writer io.Writer) funcOpts {
 	}
 }
 
-func WithDispatcher(dispatcher []func()) funcOpts {
+func WithDispatcher(dispatcher map[string]io.Writer) funcOpts {
 	return func(l *logger) {
-		l.dispatcher = dispatcher
+		l.levels = make([]logrus.Level, 0, len(dispatcher))
+		l.writers = make(map[logrus.Level]io.Writer, len(dispatcher))
+		maxLevel := logrus.Level(len(logrus.AllLevels))
+		for level, writer := range dispatcher {
+			lv, err := logrus.ParseLevel(level)
+			if err != nil {
+				continue
+			}
+
+			if maxLevel <= lv {
+				continue
+			}
+			l.writers[lv] = writer
+			l.levels = append(l.levels, lv)
+		}
 	}
 }
 
 func NewLogger(opts ...funcOpts) *logrus.Logger {
 	l := &logger{
-		srvName:    "Default-Server",
-		level:      logrus.DebugLevel,
-		levels:     logrus.AllLevels,
-		formatter:  &logrus.JSONFormatter{TimestampFormat: "2006-01-02 15:04:05.000"},
-		writer:     os.Stdout,
-		dispatcher: nil,
+		srvName:   "Default-Server",
+		level:     logrus.DebugLevel,
+		levels:    logrus.AllLevels,
+		formatter: &logrus.JSONFormatter{TimestampFormat: "2006-01-02 15:04:05.000"},
+		writer:    os.Stdout,
 	}
 	for _, opt := range opts {
 		opt(l)
@@ -83,6 +96,7 @@ func NewLogger(opts ...funcOpts) *logrus.Logger {
 	stdLogger.SetFormatter(l.formatter)
 	stdLogger.SetLevel(l.level)
 	stdLogger.SetOutput(l.writer)
+	stdLogger.SetReportCaller(true)
 	stdLogger.AddHook(l)
 	return stdLogger
 }
@@ -100,8 +114,14 @@ func (l *logger) Fire(entry *logrus.Entry) error {
 	entry.Data[xutils.ServerName] = l.srvName
 
 	// 日志统一分发 es mongo kafka
-	for _, dispatcher := range l.dispatcher {
-		go dispatcher()
+	writer, ok := l.writers[entry.Level]
+	if !ok {
+		return nil
 	}
-	return nil
+	eb, err := entry.Bytes()
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write(eb)
+	return err
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/pkg/errors"
 	"github.com/smallfish-root/common-pkg/xjson"
 	"github.com/smallfish-root/common-pkg/xsync"
-	"github.com/pkg/errors"
 	"sync"
 	"time"
 )
@@ -17,13 +17,14 @@ var (
 )
 
 type MySqlPoolConfig struct {
-	Alias       string        `json:"alias"`
-	Address     string        `json:"address"`
-	MaxIdleConn int           `json:"max_idle_conn"`
-	MaxOpenConn int           `json:"max_open_conn"`
-	MaxLifeTime time.Duration `json:"max_life_time"`
-	MaxIdleTime time.Duration `json:"max_idle_time"`
-	LogMode     int           `json:"log_mode"` //默认warn
+	Alias         string        `json:"alias"`
+	Address       string        `json:"address"`
+	MaxIdleConn   int           `json:"max_idle_conn"`
+	MaxOpenConn   int           `json:"max_open_conn"`
+	MaxLifeTime   time.Duration `json:"max_life_time"`
+	MaxIdleTime   time.Duration `json:"max_idle_time"`
+	LogMode       int           `json:"log_mode"` //默认warn
+	CustomizedLog bool          `json:"customized_log"`
 }
 
 func InitMySqlPool(configs []*MySqlPoolConfig) error {

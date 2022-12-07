@@ -20,7 +20,7 @@ func ErrLogger() gin.HandlerFunc {
 		for _, err := range ctx.Errors {
 			if err != nil {
 				//logger.Errorf("%+v", err.Err)
-				logrus.Errorf("%+v", err.Err)
+				logrus.WithContext(ctx.Request.Context()).Errorf("%+v", err.Err)
 			}
 		}
 	}

@@ -2,8 +2,8 @@ package xmysql
 
 import (
 	"fmt"
-	"github.com/smallfish-root/common-pkg/xjson"
 	"github.com/pkg/errors"
+	"github.com/smallfish-root/common-pkg/xjson"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -32,9 +32,13 @@ func InitMySql(configs []*MySqlPoolConfig) {
 }
 
 func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
+	l := logger.Default.LogMode(logger.LogLevel(c.LogMode))
+	if c.CustomizedLog {
+		l = newCustomizedLogger(WithLogLevel(logger.LogLevel(c.LogMode)))
+	}
 	cfg := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{SingularTable: true},
-		Logger:         logger.Default.LogMode(logger.LogLevel(c.LogMode)),
+		Logger:         l,
 	}
 	db, err := gorm.Open(mysql.Open(c.Address), cfg)
 	if err != nil {
