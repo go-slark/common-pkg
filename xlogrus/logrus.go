@@ -17,31 +17,31 @@ type logger struct {
 	writers   map[logrus.Level]io.Writer
 }
 
-type funcOpts func(*logger)
+type FuncOpts func(*logger)
 
-func WithSrvName(name string) funcOpts {
+func WithSrvName(name string) FuncOpts {
 	return func(l *logger) {
 		l.srvName = name
 	}
 }
 
-func WithLevel(level string) funcOpts {
+func WithLevel(level string) FuncOpts {
 	return func(l *logger) {
 		lv, err := logrus.ParseLevel(level)
 		if err != nil {
-			panic(errors.Errorf("logrus parse level fail, level:%sm err:%+v", level, err))
+			panic(errors.Errorf("logrus parse level fail, level:%s, err:%+v", level, err))
 		}
 		l.level = lv
 	}
 }
 
-func WithLevels(levels []string) funcOpts {
+func WithLevels(levels []string) FuncOpts {
 	return func(l *logger) {
 		lvs := make([]logrus.Level, 0, len(levels))
-		for _, l := range levels {
-			lv, err := logrus.ParseLevel(l)
+		for _, level := range levels {
+			lv, err := logrus.ParseLevel(level)
 			if err != nil {
-				panic(errors.Errorf("logrus parse level fail, levle:%s, err:%+v", l, err))
+				panic(errors.Errorf("logrus parse level fail, levle:%s, err:%+v", level, err))
 			}
 			lvs = append(lvs, lv)
 		}
@@ -49,19 +49,19 @@ func WithLevels(levels []string) funcOpts {
 	}
 }
 
-func WithFormatter(formatter logrus.Formatter) funcOpts {
+func WithFormatter(formatter logrus.Formatter) FuncOpts {
 	return func(l *logger) {
 		l.formatter = formatter
 	}
 }
 
-func WithWriter(writer io.Writer) funcOpts {
+func WithWriter(writer io.Writer) FuncOpts {
 	return func(l *logger) {
 		l.writer = writer
 	}
 }
 
-func WithDispatcher(dispatcher map[string]io.Writer) funcOpts {
+func WithDispatcher(dispatcher map[string]io.Writer) FuncOpts {
 	return func(l *logger) {
 		l.levels = make([]logrus.Level, 0, len(dispatcher))
 		l.writers = make(map[logrus.Level]io.Writer, len(dispatcher))
@@ -81,7 +81,7 @@ func WithDispatcher(dispatcher map[string]io.Writer) funcOpts {
 	}
 }
 
-func NewLogger(opts ...funcOpts) *logrus.Logger {
+func NewLogger(opts ...FuncOpts) *logrus.Logger {
 	l := &logger{
 		srvName:   "Default-Server",
 		level:     logrus.DebugLevel,
