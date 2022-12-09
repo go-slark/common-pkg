@@ -63,7 +63,7 @@ func GetErr(err error) *CustomError {
 		},
 		error: err,
 	}
-	errors.As(err, e)
+	errors.As(err, &e)
 	return e
 }
 
