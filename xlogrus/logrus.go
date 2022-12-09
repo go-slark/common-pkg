@@ -83,11 +83,14 @@ func WithDispatcher(dispatcher map[string]io.Writer) FuncOpts {
 
 func NewLogger(opts ...FuncOpts) *logrus.Logger {
 	l := &logger{
-		srvName:   "Default-Server",
-		level:     logrus.DebugLevel,
-		levels:    logrus.AllLevels,
-		formatter: &logrus.JSONFormatter{TimestampFormat: "2006-01-02 15:04:05.000"},
-		writer:    os.Stdout,
+		srvName: "Default-Server",
+		level:   logrus.DebugLevel,
+		levels:  logrus.AllLevels,
+		formatter: &logrus.JSONFormatter{
+			TimestampFormat: "2006-01-02 15:04:05.000",
+			PrettyPrint:     true,
+		},
+		writer: os.Stdout,
 	}
 	for _, opt := range opts {
 		opt(l)

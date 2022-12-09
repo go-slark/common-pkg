@@ -3,24 +3,25 @@ package xgin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/smallfish-root/common-pkg/xerror"
 	httpLogger "github.com/smallfish-root/gin-http-logger"
 )
-
-//logger := logrus.New()
-//logger.SetLevel(logrus.DebugLevel)
-//formatter := &logrus.JSONFormatter{
-//	TimestampFormat: "2006-01-02 15:04:05.000",
-//}
-//logger.SetFormatter(formatter)
-//logger.SetOutput(io.MultiWriter([]io.Writer{os.Stdout}...))
 
 func ErrLogger() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Next()
+		context := ctx.Request.Context()
 		for _, err := range ctx.Errors {
-			if err != nil {
-				//logger.Errorf("%+v", err.Err)
-				logrus.WithContext(ctx.Request.Context()).Errorf("%+v", err.Err)
+			ce, ok := err.Err.(*xerror.CustomError)
+			if !ok {
+				logrus.WithContext(context).WithFields(logrus.Fields{"meta": err.Meta}).WithError(err.Err).Error("系统异常")
+			} else {
+				fields := logrus.Fields{
+					"surplus": ce.Surplus,
+					"meta":    ce.Metadata,
+					"code":    ce.Code,
+				}
+				logrus.WithContext(context).WithFields(fields).WithError(ce.GetError()).Error(ce.Message)
 			}
 		}
 	}
