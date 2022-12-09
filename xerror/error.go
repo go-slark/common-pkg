@@ -33,16 +33,16 @@ type CustomError struct {
 	error
 }
 
-func (e CustomError) Error() string {
+func (e *CustomError) Error() string {
 	if e.error != nil {
 		e.Err = e.error.Error()
 	}
-	err, _ := json.Marshal(&e)
+	err, _ := json.Marshal(e)
 	return string(err)
 	//return fmt.Sprintf("code:%d, reason:%s, msg:%v, metadata:%v, surplus:%v, err:%v", e.Code, e.Reason, e.Message, e.Metadata, e.Surplus, e.error)
 }
 
-func (e CustomError) GetError() error {
+func (e *CustomError) GetError() error {
 	return e.error
 }
 
@@ -63,7 +63,7 @@ func GetErr(err error) *CustomError {
 		},
 		error: err,
 	}
-	errors.As(err, &e)
+	errors.As(err, e)
 	return e
 }
 
