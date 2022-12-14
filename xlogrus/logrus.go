@@ -9,12 +9,13 @@ import (
 )
 
 type logger struct {
-	srvName   string
-	level     logrus.Level
-	levels    []logrus.Level
-	formatter logrus.Formatter
-	writer    io.Writer
-	writers   map[logrus.Level]io.Writer
+	srvName      string
+	level        logrus.Level
+	levels       []logrus.Level
+	formatter    logrus.Formatter
+	writer       io.Writer
+	writers      map[logrus.Level]io.Writer
+	reportCaller bool
 }
 
 type FuncOpts func(*logger)
@@ -81,6 +82,12 @@ func WithDispatcher(dispatcher map[string]io.Writer) FuncOpts {
 	}
 }
 
+func WithReportCaller(caller bool) FuncOpts {
+	return func(l *logger) {
+		l.reportCaller = caller
+	}
+}
+
 func NewLogger(opts ...FuncOpts) *logrus.Logger {
 	l := &logger{
 		srvName: "Default-Server",
@@ -88,7 +95,7 @@ func NewLogger(opts ...FuncOpts) *logrus.Logger {
 		levels:  logrus.AllLevels,
 		formatter: &logrus.JSONFormatter{
 			TimestampFormat: "2006-01-02 15:04:05.000",
-			PrettyPrint:     true,
+			PrettyPrint:     false,
 		},
 		writer: os.Stdout,
 	}
@@ -99,7 +106,7 @@ func NewLogger(opts ...FuncOpts) *logrus.Logger {
 	stdLogger.SetFormatter(l.formatter)
 	stdLogger.SetLevel(l.level)
 	stdLogger.SetOutput(l.writer)
-	stdLogger.SetReportCaller(true)
+	stdLogger.SetReportCaller(l.reportCaller)
 	stdLogger.AddHook(l)
 	return stdLogger
 }
