@@ -7,8 +7,6 @@ import (
 	"github.com/smallfish-root/common-pkg/xutils"
 )
 
-var requestId string
-
 type config struct {
 	builder   func() string
 	requestId string
@@ -42,15 +40,14 @@ func BuildRequestId(opts ...Option) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
 		rid := ctx.GetHeader(cfg.requestId)
-		if rid == "" {
+		if len(rid) == 0 {
 			rid = cfg.builder()
 		}
-		requestId = cfg.requestId
 		ctx.Header(cfg.requestId, rid)
 		ctx.Request = ctx.Request.WithContext(context.WithValue(context.Background(), cfg.requestId, rid))
 	}
 }
 
 func GetRequestId(ctx *gin.Context) string {
-	return ctx.Writer.Header().Get(requestId)
+	return ctx.Writer.Header().Get(xutils.TraceID)
 }
