@@ -257,6 +257,7 @@ func Search(index, docType string, query interface{}) ([]byte, error) {
 		//client.Search.WithFrom(0),
 		//client.Search.WithSize(3),
 		//client.Search.WithSort([]string{"_source:{name:desc}", "_score:asc", "_id:desc"}...), // 多字段排序
+		//client.Search.WithScroll(),
 	}
 	rsp, err := client.Search(opt...)
 	if err != nil {
