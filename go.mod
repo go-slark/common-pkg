@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/Shopify/sarama v1.35.0
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/elastic/go-elasticsearch/v7 v7.17.7
 	github.com/gin-contrib/cors v1.4.0
@@ -22,6 +23,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/looplab/eventhorizon v0.15.5
 	github.com/pkg/errors v0.9.1
+	github.com/rs/xid v1.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/smallfish-root/eventhorizon v1.0.1
 	github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
