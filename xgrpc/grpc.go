@@ -6,6 +6,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -118,6 +119,7 @@ func (s *Server) NewGRPCServer(conf *GRPCServerConf) (*GRPCServer, error) {
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_logrus.UnaryServerInterceptor(entry, opt...),
 			grpc_logrus.PayloadUnaryServerInterceptor(entry, func(ctx context.Context, fullMethodName string, servingObject interface{}) bool { return true }),
+			grpc_validator.UnaryServerInterceptor(),
 		), UnaryServerTimeout(3*time.Second)),
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle:     15 * time.Second,

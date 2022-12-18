@@ -1,16 +1,18 @@
 package mq
 
+import "context"
+
 type KafkaClient struct {
 	*KafkaProducer
 	*KafkaConsumerGroup
 }
 
-func (k *KafkaClient) AsyncProduce(topic, key string, msg []byte) error {
-	return k.AsyncSend(topic, key, msg)
+func (k *KafkaClient) AsyncProduce(ctx context.Context, topic, key string, msg []byte) error {
+	return k.AsyncSend(ctx, topic, key, msg)
 }
 
-func (k *KafkaClient) SyncProduce(topic, key string, msg []byte) error {
-	return k.SyncSend(topic, key, msg)
+func (k *KafkaClient) SyncProduce(ctx context.Context, topic, key string, msg []byte) error {
+	return k.SyncSend(ctx, topic, key, msg)
 }
 
 func (k *KafkaClient) Consume() error {
@@ -19,12 +21,12 @@ func (k *KafkaClient) Consume() error {
 }
 
 type queue interface {
-	Produce(topic, key string, msg []byte) error
+	Produce(ctx context.Context, topic, key string, msg []byte) error
 	Consume() error
 }
 
-func (k *KafkaClient) Produce(topic, key string, msg []byte) error {
-	return k.AsyncSend(topic, key, msg)
+func (k *KafkaClient) Produce(ctx context.Context, topic, key string, msg []byte) error {
+	return k.AsyncSend(ctx, topic, key, msg)
 }
 
 var _ queue = &KafkaClient{}

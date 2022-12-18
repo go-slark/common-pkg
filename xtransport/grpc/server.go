@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 	"net"
 )
 
@@ -44,6 +45,7 @@ func NewServer(opts ...ServerOption) *Server {
 	srv.Server = grpc.NewServer(grpcOpts...)
 	srv.err = srv.listen()
 	grpc_health_v1.RegisterHealthServer(srv.Server, srv.health)
+	reflection.Register(srv.Server)
 	return srv
 }
 

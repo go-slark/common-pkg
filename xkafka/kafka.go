@@ -2,9 +2,10 @@ package mq
 
 import (
 	"context"
-	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/smallfish-root/common-pkg/xutils"
 	"time"
 )
 
@@ -61,11 +62,17 @@ func (kp *KafkaProducer) Close() {
 	kp.AsyncClose()
 }
 
-func (kp *KafkaProducer) SyncSend(topic, key string, msg []byte) error {
+func (kp *KafkaProducer) SyncSend(ctx context.Context, topic, key string, msg []byte) error {
 	pm := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(msg),
 		Key:   sarama.StringEncoder(key),
+		Headers: []sarama.RecordHeader{
+			{
+				Key:   []byte(xutils.TraceID),
+				Value: []byte(ctx.Value(xutils.TraceID).(string)),
+			},
+		},
 	}
 
 	_, _, err := kp.SyncProducer.SendMessage(pm)
@@ -76,11 +83,17 @@ func (kp *KafkaProducer) SyncSend(topic, key string, msg []byte) error {
 	return nil
 }
 
-func (kp *KafkaProducer) AsyncSend(topic, key string, msg []byte) error {
+func (kp *KafkaProducer) AsyncSend(ctx context.Context, topic, key string, msg []byte) error {
 	pm := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(msg),
 		Key:   sarama.StringEncoder(key),
+		Headers: []sarama.RecordHeader{
+			{
+				Key:   []byte(xutils.TraceID),
+				Value: []byte(ctx.Value(xutils.TraceID).(string)),
+			},
+		},
 	}
 
 	kp.AsyncProducer.Input() <- pm
@@ -174,7 +187,7 @@ func (kc *KafkaConsumerGroup) Consume() {
 	for {
 		err := kc.ConsumerGroup.Consume(context.TODO(), kc.Topics, kc.ConsumerGroupHandler)
 		if err != nil {
-			fmt.Printf("consumer group consume fail, err:%+v\n", err)
+			logrus.Warnf("consumer group consume fail, err:%+v\n", err)
 		}
 		time.Sleep(time.Second)
 	}
