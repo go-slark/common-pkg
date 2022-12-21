@@ -1,8 +1,10 @@
 package xws
 
 import (
+	"context"
 	"errors"
 	"github.com/gorilla/websocket"
+	"github.com/smallfish-root/common-pkg/xutils"
 	"net/http"
 	"strconv"
 	"sync"
@@ -99,6 +101,7 @@ func WithReadLimit(rLimit int64) Option {
 type Msg struct {
 	Type    int
 	Payload []byte
+	ctx     context.Context
 }
 
 type WSConn interface {
@@ -150,6 +153,7 @@ func (c *connOption) read() {
 		m := &Msg{
 			Type:    msgType,
 			Payload: payload,
+			ctx:     context.WithValue(context.Background(), xutils.TraceID, xutils.BuildRequestID()),
 		}
 		select {
 		case c.in <- m:

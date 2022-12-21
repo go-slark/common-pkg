@@ -2,7 +2,6 @@ package xgrpc
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/smallfish-root/common-pkg/xutils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -33,7 +32,7 @@ func UnaryClientTraceIDInterceptor() grpc.UnaryClientInterceptor {
 		value := ctx.Value(xutils.TraceID)
 		requestID, ok := value.(string)
 		if !ok || len(requestID) == 0 {
-			requestID = uuid.New().String()
+			requestID = xutils.BuildRequestID()
 		}
 
 		md, ok := metadata.FromOutgoingContext(ctx)
@@ -106,7 +105,7 @@ func UnaryServerTracIDInterceptor() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		ctx = context.WithValue(ctx, xutils.TraceID, uuid.New().String())
+		ctx = context.WithValue(ctx, xutils.TraceID, xutils.BuildRequestID())
 		return handler(ctx, req)
 	}
 }

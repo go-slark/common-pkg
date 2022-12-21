@@ -3,7 +3,6 @@ package xgin
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/smallfish-root/common-pkg/xutils"
 )
 
@@ -29,7 +28,7 @@ func WithRequestId(requestId string) Option {
 func BuildRequestId(opts ...Option) gin.HandlerFunc {
 	cfg := &config{
 		builder: func() string {
-			return uuid.New().String()
+			return xutils.BuildRequestID()
 		},
 		requestId: xutils.TraceID,
 	}

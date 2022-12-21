@@ -2,6 +2,7 @@ package xutils
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -50,3 +51,7 @@ const (
 	ServerName = "server-name"
 	TraceID    = "x-request-id"
 )
+
+func BuildRequestID() string {
+	return uuid.New().String()
+}

@@ -60,7 +60,7 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 			if len(te) != 0 {
 				err = errors.New(fmt.Sprintf("%v", te))
 			}
-			r := Error(xerror.NewError(xerror.ParamValidCode, xerror.ParamValid, err.Error()).WithError(err))
+			r := Error(xerror.NewError(xerror.ParamValidCode, xerror.ParamValid, xerror.ParamValid).WithError(err))
 			_ = ctx.Error(r.Err())
 			ctx.Render(r.Code(), r)
 			ctx.Abort()
