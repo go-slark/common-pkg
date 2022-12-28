@@ -3,7 +3,6 @@ package xgin
 import (
 	"github.com/smallfish-root/common-pkg/xerror"
 	"github.com/smallfish-root/common-pkg/xgin/xrender"
-	"google.golang.org/protobuf/proto"
 	"net/http"
 )
 
@@ -20,24 +19,10 @@ func Success(data interface{}) xrender.Render {
 	if data == nil {
 		data = struct{}{}
 	}
-	var (
-		msg  = "成功"
-		code int
-		rsp  interface{}
-	)
-	switch data.(type) {
-	case proto.Message:
-		rsp = &xrender.ProtoResponse{
-			Code:    code,
-			Msg:     msg,
-			Message: data.(proto.Message),
-		}
-	default:
-		rsp = &Response{
-			Code: code,
-			Msg:  msg,
-			Data: data,
-		}
+	rsp := &Response{
+		Code: 0,
+		Msg:  "成功",
+		Data: data,
 	}
 	return JSON(http.StatusOK, rsp, nil)
 }

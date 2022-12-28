@@ -67,7 +67,6 @@ func bindRequest(reqObj interface{}, format uint8) gin.HandlerFunc {
 			return
 		}
 		ctx.Set(requestKey, req)
-		//ctx.Next()
 	}
 }
 

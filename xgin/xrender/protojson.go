@@ -7,12 +7,6 @@ import (
 )
 
 type ProtoJson struct {
-	HttpCode
-	Error
-	Data *ProtoResponse
-}
-
-type ProtoResponse struct {
 	Code    int
 	TraceID interface{}
 	Msg     string
@@ -24,12 +18,12 @@ var MarshalOptions = protojson.MarshalOptions{
 	EmitUnpopulated: true,
 }
 
-func (r ProtoJson) Render(w http.ResponseWriter) (err error) {
+func (p ProtoJson) Render(w http.ResponseWriter) (err error) {
 	header := w.Header()
 	if val := header["Content-Type"]; len(val) == 0 {
 		header["Content-Type"] = []string{"application/json; charset=utf-8"}
 	}
-	jsonBytes, err := MarshalOptions.Marshal(r.Data)
+	jsonBytes, err := MarshalOptions.Marshal(p)
 	if err != nil {
 		return err
 	}
@@ -40,7 +34,7 @@ func (r ProtoJson) Render(w http.ResponseWriter) (err error) {
 	return
 }
 
-func (r ProtoJson) WriteContentType(w http.ResponseWriter) {
+func (p ProtoJson) WriteContentType(w http.ResponseWriter) {
 	header := w.Header()
 	if val := header["Content-Type"]; len(val) == 0 {
 		header["Content-Type"] = []string{"application/json; charset=utf-8"}

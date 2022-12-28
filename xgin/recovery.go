@@ -21,6 +21,5 @@ func Recovery(fn func(ctx *gin.Context, err interface{})) gin.HandlerFunc {
 				ctx.Abort()
 			}
 		}()
-		//ctx.Next()
 	}
 }

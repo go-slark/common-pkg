@@ -34,22 +34,10 @@ func HandlerDecorator(fn decoratorHandlerFunc, fs ...handlerFunc) gin.HandlerFun
 		if err != nil {
 			_ = ctx.Error(err)
 		}
-		switch r.(type) {
-		case *xrender.JSON:
-			render := r.(*xrender.JSON)
-			rsp, ok := render.Data.(*Response)
-			if !ok {
-				break
-			}
-			rsp.TraceID = ctx.Request.Context().Value(xutils.TraceID)
-		case *xrender.ProtoJson:
-			render := r.(*xrender.ProtoJson)
-			rsp := render.Data
-			if rsp == nil {
-				break
-			}
-			rsp.TraceID = ctx.Request.Context().Value(xutils.TraceID)
-		}
+
+		render := r.(*xrender.JSON)
+		rsp := render.Data.(*Response)
+		rsp.TraceID = ctx.Request.Context().Value(xutils.TraceID)
 		ctx.Render(r.Code(), r)
 	}
 }
@@ -70,20 +58,11 @@ func Handle(fs ...handlerFunc) gin.HandlerFunc {
 }
 
 func JSON(code int, obj interface{}, err error) xrender.Render {
-	switch data := obj.(type) {
-	case *xrender.ProtoResponse:
-		r := &xrender.ProtoJson{}
-		r.Code_ = code
-		r.Data = data
-		r.Error.Update(err)
-		return r
-	default:
-		r := &xrender.JSON{}
-		r.Code_ = code
-		r.Data = obj
-		r.Error.Update(err)
-		return r
-	}
+	r := &xrender.JSON{}
+	r.Code_ = code
+	r.Data = obj
+	r.Error.Update(err)
+	return r
 }
 
 func String(code int, formant string, values ...interface{}) xrender.Render {
