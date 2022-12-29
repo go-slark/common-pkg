@@ -2,8 +2,10 @@ package xgin
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/smallfish-root/common-pkg/xerror"
 	"github.com/smallfish-root/common-pkg/xgin/xrender"
 	"github.com/smallfish-root/common-pkg/xutils"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"net/http"
 )
@@ -98,4 +100,19 @@ func Data(code int, contentType string, data []byte) xrender.Render {
 	r.ContentType = contentType
 	r.Data.Data = data
 	return r
+}
+
+func ProtoJson(out proto.Message, err error) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		rsp := &xrender.ProtoJson{TraceID: ctx.Request.Context().Value(xutils.TraceID)}
+		rsp.Msg = "成功"
+		rsp.Message = out
+		if err != nil {
+			e := xerror.GetErr(err)
+			rsp.Code = int(e.Status.Code)
+			rsp.Msg = e.Status.Message
+			_ = ctx.Error(e)
+		}
+		ctx.JSON(http.StatusOK, rsp)
+	}
 }
