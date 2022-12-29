@@ -59,7 +59,9 @@ func NewError(code int, reason, msg string) *CustomError {
 func GetErr(err error) *CustomError {
 	e := &CustomError{
 		Status: Status{
-			Code: UnknownCode,
+			Code:    UnknownCode,
+			Reason:  UnknownReason,
+			Message: UnknownReason,
 		},
 		error: err,
 	}
