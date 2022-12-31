@@ -15,8 +15,8 @@ type loggerEntity struct {
 	*logrus.Logger
 }
 
-func NewLoggerEntity() *loggerEntity {
-	return &loggerEntity{Logger: NewLogger()}
+func NewLoggerEntity(opts ...FuncOpts) *loggerEntity {
+	return &loggerEntity{Logger: NewLogger(opts...)}
 }
 
 const (
