@@ -1,4 +1,4 @@
-package mq
+package xkafka
 
 import (
 	"context"
@@ -42,14 +42,20 @@ type KafkaProducer struct {
 }
 
 type ProducerConf struct {
-	Brokers []string `mapstructure:"brokers"`
-	Retry   int      `mapstructure:"retry"`
+	Brokers       []string `mapstructure:"brokers"`
+	Retry         int      `mapstructure:"retry"`
+	Ack           int16    `mapstructure:"ack"`
+	ReturnSuccess bool     `mapstructure:"return_success"`
+	ReturnErrors  bool     `mapstructure:"return_errors"`
 }
 
 type ConsumerGroupConf struct {
-	Brokers []string `mapstructure:"brokers"`
-	GroupId string   `mapstructure:"group_id"`
-	Topics  []string `mapstructure:"topics"`
+	Brokers      []string `mapstructure:"brokers"`
+	GroupID      string   `mapstructure:"group_id"`
+	Topics       []string `mapstructure:"topics"`
+	Initial      int64    `mapstructure:"initial"`
+	CommitEnable bool     `mapstructure:"commit_enable"`
+	ReturnErrors bool     `mapstructure:"return_errors"`
 }
 
 type KafkaConf struct {
@@ -63,6 +69,10 @@ func (kp *KafkaProducer) Close() {
 }
 
 func (kp *KafkaProducer) SyncSend(ctx context.Context, topic, key string, msg []byte) error {
+	traceID, ok := ctx.Value(xutils.TraceID).(string)
+	if !ok {
+		traceID = xutils.BuildRequestID()
+	}
 	pm := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(msg),
@@ -70,7 +80,7 @@ func (kp *KafkaProducer) SyncSend(ctx context.Context, topic, key string, msg []
 		Headers: []sarama.RecordHeader{
 			{
 				Key:   []byte(xutils.TraceID),
-				Value: []byte(ctx.Value(xutils.TraceID).(string)),
+				Value: []byte(traceID),
 			},
 		},
 	}
@@ -84,6 +94,10 @@ func (kp *KafkaProducer) SyncSend(ctx context.Context, topic, key string, msg []
 }
 
 func (kp *KafkaProducer) AsyncSend(ctx context.Context, topic, key string, msg []byte) error {
+	traceID, ok := ctx.Value(xutils.TraceID).(string)
+	if !ok {
+		traceID = xutils.BuildRequestID()
+	}
 	pm := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(msg),
@@ -91,7 +105,7 @@ func (kp *KafkaProducer) AsyncSend(ctx context.Context, topic, key string, msg [
 		Headers: []sarama.RecordHeader{
 			{
 				Key:   []byte(xutils.TraceID),
-				Value: []byte(ctx.Value(xutils.TraceID).(string)),
+				Value: []byte(traceID),
 			},
 		},
 	}
@@ -109,43 +123,43 @@ func (kp *KafkaProducer) AsyncSend(ctx context.Context, topic, key string, msg [
 	return nil
 }
 
-func InitKafkaProducer(conf *KafkaConf) {
-	kafkaProducer = &KafkaProducer{
+func InitKafkaProducer(conf *ProducerConf) *KafkaProducer {
+	return &KafkaProducer{
 		SyncProducer:  newSyncProducer(conf),
 		AsyncProducer: newAsyncProducer(conf),
 	}
 }
 
-func newSyncProducer(conf *KafkaConf) sarama.SyncProducer {
+func newSyncProducer(conf *ProducerConf) sarama.SyncProducer {
 	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.RequiredAcks = sarama.RequiredAcks(conf.Ack) // WaitForAll
 	config.Producer.Partitioner = sarama.NewHashPartitioner
-	config.Producer.Retry.Max = conf.Producer.Retry
-	config.Producer.Return.Successes = true
-	config.Producer.Return.Errors = true
+	config.Producer.Retry.Max = conf.Retry
+	config.Producer.Return.Successes = conf.ReturnSuccess // true
+	config.Producer.Return.Errors = conf.ReturnErrors     // true
 	if err := config.Validate(); err != nil {
 		panic(err)
 	}
 
-	producer, err := sarama.NewSyncProducer(conf.Producer.Brokers, config)
+	producer, err := sarama.NewSyncProducer(conf.Brokers, config)
 	if err != nil {
 		panic(err)
 	}
 	return producer
 }
 
-func newAsyncProducer(conf *KafkaConf) sarama.AsyncProducer {
+func newAsyncProducer(conf *ProducerConf) sarama.AsyncProducer {
 	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.RequiredAcks = sarama.RequiredAcks(conf.Ack) // WaitForAll
 	config.Producer.Partitioner = sarama.NewHashPartitioner
-	config.Producer.Retry.Max = conf.Producer.Retry
-	config.Producer.Return.Successes = false
-	config.Producer.Return.Errors = true
+	config.Producer.Retry.Max = conf.Retry
+	config.Producer.Return.Successes = conf.ReturnSuccess // true
+	config.Producer.Return.Errors = conf.ReturnErrors     // true
 	if err := config.Validate(); err != nil {
 		panic(err)
 	}
 
-	producer, err := sarama.NewAsyncProducer(conf.Producer.Brokers, config)
+	producer, err := sarama.NewAsyncProducer(conf.Brokers, config)
 	if err != nil {
 		panic(err)
 	}
@@ -159,23 +173,23 @@ type KafkaConsumerGroup struct {
 	Topics []string
 }
 
-func InitKafkaConsumer(conf *KafkaConf) {
-	kafkaConsumerGroup = &KafkaConsumerGroup{
+func InitKafkaConsumer(conf *ConsumerGroupConf) *KafkaConsumerGroup {
+	return &KafkaConsumerGroup{
 		ConsumerGroup: newConsumerGroup(conf),
-		Topics:        conf.ConsumerGroup.Topics,
+		Topics:        conf.Topics,
 	}
 }
 
-func newConsumerGroup(conf *KafkaConf) sarama.ConsumerGroup {
+func newConsumerGroup(conf *ConsumerGroupConf) sarama.ConsumerGroup {
 	config := sarama.NewConfig()
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	config.Consumer.Offsets.AutoCommit.Enable = false
-	config.Consumer.Return.Errors = true
+	config.Consumer.Offsets.Initial = conf.Initial                // sarama.OffsetOldest
+	config.Consumer.Offsets.AutoCommit.Enable = conf.CommitEnable // false
+	config.Consumer.Return.Errors = conf.ReturnErrors             // true
 	if err := config.Validate(); err != nil {
 		panic(err)
 	}
 
-	consumerGroup, err := sarama.NewConsumerGroup(conf.ConsumerGroup.Brokers, conf.ConsumerGroup.GroupId, config)
+	consumerGroup, err := sarama.NewConsumerGroup(conf.Brokers, conf.GroupID, config)
 	if err != nil {
 		panic(err)
 	}
@@ -193,8 +207,13 @@ func (kc *KafkaConsumerGroup) Consume() {
 	}
 }
 
-func (kc *KafkaConsumerGroup) Close() {
-	kc.Close()
+func (kc *KafkaConsumerGroup) Start() error {
+	kc.Consume()
+	return nil
+}
+
+func (kc *KafkaConsumerGroup) Stop(_ context.Context) error {
+	return kc.Close()
 }
 
 var (

@@ -4,18 +4,18 @@ import (
 	"context"
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
-	mq "github.com/smallfish-root/common-pkg/xkafka"
+	"github.com/smallfish-root/common-pkg/xkafka"
 )
 
 type Kafka struct {
-	*mq.KafkaClient
+	*xkafka.KafkaClient
 }
 
 func NewKafka() *Kafka {
 	k := &Kafka{
-		KafkaClient: &mq.KafkaClient{
-			KafkaProducer:      mq.GetKafkaProducer(),
-			KafkaConsumerGroup: mq.GetKafkaConsumerGroup(),
+		KafkaClient: &xkafka.KafkaClient{
+			KafkaProducer:      xkafka.GetKafkaProducer(),
+			KafkaConsumerGroup: xkafka.GetKafkaConsumerGroup(),
 		},
 	}
 	k.ConsumerGroupHandler = k
