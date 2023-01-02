@@ -3,6 +3,7 @@ package xgin
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/smallfish-root/common-pkg/xerror"
+	"github.com/smallfish-root/common-pkg/xlogger"
 	"github.com/smallfish-root/common-pkg/xvalidator"
 	"net/http"
 )
@@ -15,6 +16,7 @@ type EngineParam struct {
 	Routers      []func(r gin.IRouter)
 	HandlerFunc  []gin.HandlerFunc
 	ValidTrans   []xvalidator.ValidTrans
+	xlogger.Logger
 }
 
 func SetEngine(param EngineParam) *gin.Engine {
@@ -32,7 +34,7 @@ func SetEngine(param EngineParam) *gin.Engine {
 		ctx.Render(http.StatusOK, Error(xerror.NewError(xerror.PanicCode, xerror.Panic, xerror.Panic).WithSurplus(err)))
 	}))
 	engine.Use(BuildRequestId())
-	engine.Use(ErrLogger())
+	engine.Use(ErrLogger(param.Logger))
 	if param.AccessLog {
 		engine.Use(Logger(param.ExcludePaths...))
 	}

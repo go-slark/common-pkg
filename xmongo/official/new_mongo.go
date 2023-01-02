@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/smallfish-root/common-pkg/xjson"
+	"github.com/smallfish-root/common-pkg/xlogger"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -27,6 +27,7 @@ type MongoConf struct {
 	MaxPoolSize uint64 `json:"max_pool_size"`
 	MinPoolSize uint64 `json:"min_pool_size"`
 	Monitor     bool   `json:"monitor"`
+	xlogger.Logger
 }
 
 func createMongoClient(c *MongoConf) (*mongo.Client, error) {
@@ -40,13 +41,13 @@ func createMongoClient(c *MongoConf) (*mongo.Client, error) {
 	if c.Monitor {
 		opts.SetMonitor(&event.CommandMonitor{
 			Started: func(ctx context.Context, startedEvent *event.CommandStartedEvent) {
-				logrus.WithContext(ctx).Printf("%v", startedEvent.Command)
+				c.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf("%v", startedEvent.Command))
 			},
 			Succeeded: func(ctx context.Context, succeededEvent *event.CommandSucceededEvent) {
-				logrus.WithContext(ctx).Printf("%v", succeededEvent.Reply)
+				c.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf("%v", succeededEvent.Reply))
 			},
 			Failed: func(ctx context.Context, failedEvent *event.CommandFailedEvent) {
-				logrus.WithContext(ctx).Printf("%v", failedEvent.Failure)
+				c.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf("%v", failedEvent.Failure))
 			},
 		})
 	}

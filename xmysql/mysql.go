@@ -6,6 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/pkg/errors"
 	"github.com/smallfish-root/common-pkg/xjson"
+	"github.com/smallfish-root/common-pkg/xlogger"
 	"github.com/smallfish-root/common-pkg/xsync"
 	"sync"
 	"time"
@@ -25,6 +26,7 @@ type MySqlPoolConfig struct {
 	MaxIdleTime   time.Duration `json:"max_idle_time"`
 	LogMode       int           `json:"log_mode"` //默认warn
 	CustomizedLog bool          `json:"customized_log"`
+	xlogger.Logger
 }
 
 func InitMySqlPool(configs []*MySqlPoolConfig) error {

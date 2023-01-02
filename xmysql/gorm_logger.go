@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"github.com/smallfish-root/common-pkg/xlogger"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
 	"time"
@@ -36,8 +36,15 @@ func WithRecordNotFound(i bool) FuncOpts {
 	}
 }
 
+func WithLogger(logger xlogger.Logger) FuncOpts {
+	return func(l *customizedLogger) {
+		l.Logger = logger
+	}
+}
+
 type customizedLogger struct {
 	logger.Config
+	xlogger.Logger
 	infoStr, warnStr, errStr            string
 	traceStr, traceErrStr, traceWarnStr string
 }
@@ -91,21 +98,21 @@ func (l customizedLogger) Info(ctx context.Context, msg string, data ...interfac
 	if l.LogLevel < logger.Info {
 		return
 	}
-	logrus.WithContext(ctx).Printf(l.infoStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
+	l.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf(l.infoStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...))
 }
 
 func (l customizedLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel < logger.Warn {
 		return
 	}
-	logrus.WithContext(ctx).Printf(l.warnStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
+	l.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf(l.warnStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...))
 }
 
 func (l customizedLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel < logger.Error {
 		return
 	}
-	logrus.WithContext(ctx).Printf(l.errStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
+	l.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf(l.errStr+msg, append([]interface{}{utils.FileWithLineNum()}, data...)...))
 }
 
 func (l customizedLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -114,28 +121,22 @@ func (l customizedLogger) Trace(ctx context.Context, begin time.Time, fc func() 
 	}
 
 	elapsed := time.Since(begin)
+	sql, rows := fc()
+	var param interface{}
+	if rows == -1 {
+		param = "-"
+	} else {
+		param = rows
+	}
 	switch {
 	case err != nil && l.LogLevel >= logger.Error && (!errors.Is(err, logger.ErrRecordNotFound) || !l.IgnoreRecordNotFoundError):
-		sql, rows := fc()
-		if rows == -1 {
-			logrus.WithContext(ctx).Printf(l.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, "-", sql)
-		} else {
-			logrus.WithContext(ctx).Printf(l.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, rows, sql)
-		}
+		l.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf(l.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, param, sql))
+
 	case elapsed > l.SlowThreshold && l.SlowThreshold != 0 && l.LogLevel >= logger.Warn:
-		sql, rows := fc()
 		slowLog := fmt.Sprintf("SLOW SQL >= %v", l.SlowThreshold)
-		if rows == -1 {
-			logrus.WithContext(ctx).Printf(l.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, "-", sql)
-		} else {
-			logrus.WithContext(ctx).Printf(l.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, rows, sql)
-		}
+		l.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf(l.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, param, sql))
+
 	case l.LogLevel == logger.Info:
-		sql, rows := fc()
-		if rows == -1 {
-			logrus.WithContext(ctx).Printf(l.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, "-", sql)
-		} else {
-			logrus.WithContext(ctx).Printf(l.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, rows, sql)
-		}
+		l.Log(ctx, xlogger.InfoLevel, map[string]interface{}{}, fmt.Sprintf(l.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, param, sql))
 	}
 }

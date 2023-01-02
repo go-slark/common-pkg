@@ -32,9 +32,11 @@ func InitMySql(configs []*MySqlPoolConfig) {
 }
 
 func createNewMySqlPool(c *MySqlPoolConfig) (*gorm.DB, error) {
-	l := logger.Default.LogMode(logger.LogLevel(c.LogMode))
+	var l logger.Interface
 	if c.CustomizedLog {
-		l = newCustomizedLogger(WithLogLevel(logger.LogLevel(c.LogMode)))
+		l = newCustomizedLogger(WithLogLevel(logger.LogLevel(c.LogMode)), WithLogger(c.Logger))
+	} else {
+		l = logger.Default.LogMode(logger.LogLevel(c.LogMode))
 	}
 	cfg := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{SingularTable: true},
