@@ -36,7 +36,7 @@ func SetEngine(param EngineParam) *gin.Engine {
 	engine.Use(BuildRequestId())
 	engine.Use(ErrLogger(param.Logger))
 	if param.AccessLog {
-		engine.Use(Logger(param.ExcludePaths...))
+		engine.Use(Logger(param.Logger, param.ExcludePaths...))
 	}
 	engine.Use(param.HandlerFunc...)
 	g := engine.Group(param.BaseUrl)

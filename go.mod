@@ -26,7 +26,6 @@ require (
 	github.com/rs/xid v1.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/smallfish-root/eventhorizon v1.0.1
-	github.com/smallfish-root/gin-http-logger v1.1.1-0.20220522073633-0e64b331f592
 	github.com/spf13/viper v1.14.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/xuri/excelize/v2 v2.6.0

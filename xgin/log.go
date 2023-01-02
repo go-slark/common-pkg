@@ -2,10 +2,9 @@ package xgin
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"github.com/smallfish-root/common-pkg/xerror"
+	http_logger "github.com/smallfish-root/common-pkg/xgin/http-logger"
 	"github.com/smallfish-root/common-pkg/xlogger"
-	httpLogger "github.com/smallfish-root/gin-http-logger"
 )
 
 func ErrLogger(logger xlogger.Logger) gin.HandlerFunc {
@@ -29,10 +28,10 @@ func ErrLogger(logger xlogger.Logger) gin.HandlerFunc {
 	}
 }
 
-func Logger(excludePaths ...string) gin.HandlerFunc {
-	l := httpLogger.AccessLoggerConfig{
-		LogrusLogger:   logrus.StandardLogger(),
-		BodyLogPolicy:  httpLogger.LogAllBodies,
+func Logger(logger xlogger.Logger, excludePaths ...string) gin.HandlerFunc {
+	l := http_logger.AccessLoggerConfig{
+		Logger:         logger,
+		BodyLogPolicy:  http_logger.LogAllBodies,
 		MaxBodyLogSize: 1024 * 16, //16k
 		DropSize:       1024 * 10, //10k
 	}
@@ -41,5 +40,5 @@ func Logger(excludePaths ...string) gin.HandlerFunc {
 	for _, excludePath := range excludePaths {
 		l.ExcludePaths[excludePath] = struct{}{}
 	}
-	return httpLogger.New(l)
+	return http_logger.New(l)
 }
