@@ -67,7 +67,7 @@ func create(path, dir string) error {
 	fmt.Println("dir:", dir)
 	cmd := []string{
 		"-I=.",
-		"-I=" + dir,
+		"-I=" + "third_party",
 		"--go_out=" + dir,
 		"--go_opt=paths=source_relative",
 		"--go-grpc_out=" + dir,
