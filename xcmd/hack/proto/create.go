@@ -58,20 +58,17 @@ func walk(dir string) error {
 		return errors.New("dir invalid")
 	}
 
-	injectTag(dir)
-
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) != ".proto" || strings.HasPrefix(path, "third_party") {
 			return nil
 		}
-		//var e error
-		//e = create(path, dir)
-		//if e != nil {
-		//	return e
-		//}
-		//return injectTag(dir)
 		return create(path, dir)
 	})
+	if err != nil {
+		return err
+	}
+
+	return injectTag(dir)
 }
 
 var debug bool
@@ -118,19 +115,30 @@ func injectTag(dir string) error {
 		fmt.Println(cmd.String())
 	}
 	err := cmd.Run()
-	outStr, errSter := stdOut.String(), stdErr.String()
+	outStr, errStr := stdOut.String(), stdErr.String()
 	if err != nil {
 		fmt.Println("out str:", outStr)
-		fmt.Println("err str:", errSter)
+		fmt.Println("err str:", errStr)
 		fmt.Println("find err:", err)
 		return err
 	}
-	fmt.Println("5555:", errSter)
+	fmt.Println("5555:", errStr)
 	fmt.Print("77777:", outStr)
-	cmd = exec.Command("protoc-go-inject-tag", "-input", outStr)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+
+	for _, file := range strings.Split(outStr, "\n") {
+		if len(file) == 0 {
+			continue
+		}
+		fmt.Println("file:", file)
+		cmd = exec.Command("protoc-go-inject-tag", "-input", file)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // wire
