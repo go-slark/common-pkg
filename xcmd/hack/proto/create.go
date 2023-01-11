@@ -58,16 +58,19 @@ func walk(dir string) error {
 		return errors.New("dir invalid")
 	}
 
+	injectTag(dir)
+
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) != ".proto" || strings.HasPrefix(path, "third_party") {
 			return nil
 		}
-		var e error
-		e = create(path, dir)
-		if e != nil {
-			return e
-		}
-		return injectTag(dir)
+		//var e error
+		//e = create(path, dir)
+		//if e != nil {
+		//	return e
+		//}
+		//return injectTag(dir)
+		return create(path, dir)
 	})
 }
 
@@ -117,6 +120,9 @@ func injectTag(dir string) error {
 	err := cmd.Run()
 	outStr, errSter := stdOut.String(), stdErr.String()
 	if err != nil {
+		fmt.Println("out str:", outStr)
+		fmt.Println("err str:", errSter)
+		fmt.Println("find err:", err)
 		return err
 	}
 	fmt.Println("5555:", errSter)
