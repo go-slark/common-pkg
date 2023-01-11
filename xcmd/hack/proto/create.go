@@ -64,6 +64,7 @@ func walk(dir string) error {
 }
 
 func create(path, dir string) error {
+	fmt.Println("dir:", dir)
 	cmd := []string{
 		"-I=.",
 		"-I=" + dir,
@@ -86,6 +87,7 @@ func create(path, dir string) error {
 	}
 	cmd = append(cmd, path)
 	fd := exec.Command("protoc", cmd...)
+	fmt.Println("cmd:", fd.String())
 	fd.Stdout = os.Stdout
 	fd.Stderr = os.Stderr
 	return fd.Run()
