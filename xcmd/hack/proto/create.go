@@ -1,6 +1,7 @@
 package proto
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -21,7 +22,7 @@ var CreateCmd = &cobra.Command{
 			return
 		}
 
-		plugins := []string{"protoc-gen-go", "protoc-gen-go-grpc", "protoc-gen-gin", "protoc-gen-openapiv2", "protoc-gen-validate"}
+		plugins := []string{"protoc-gen-go", "protoc-gen-go-grpc", "protoc-gen-gin", "protoc-gen-openapiv2", "protoc-gen-validate", "wire", "protoc-go-inject-tag"}
 		err := find(plugins...)
 		if err != nil {
 			cmd := exec.Command("hack", "install")
@@ -31,6 +32,8 @@ var CreateCmd = &cobra.Command{
 				return
 			}
 		}
+
+		debug = len(args) >= 2
 
 		err = walk(strings.TrimSpace(args[0]))
 		if err != nil {
@@ -59,12 +62,18 @@ func walk(dir string) error {
 		if filepath.Ext(path) != ".proto" || strings.HasPrefix(path, "third_party") {
 			return nil
 		}
-		return create(path, dir)
+		var e error
+		e = create(path, dir)
+		if e != nil {
+			return e
+		}
+		return injectTag(dir)
 	})
 }
 
+var debug bool
+
 func create(path, dir string) error {
-	fmt.Println("dir:", dir)
 	cmd := []string{
 		"-I=.",
 		"-I=" + "../third_party",
@@ -87,8 +96,34 @@ func create(path, dir string) error {
 	}
 	cmd = append(cmd, path)
 	fd := exec.Command("protoc", cmd...)
-	fmt.Println("cmd:", fd.String())
+	if debug {
+		fmt.Println(fd.String())
+	}
 	fd.Stdout = os.Stdout
 	fd.Stderr = os.Stderr
 	return fd.Run()
 }
+
+// inject-tag
+
+func injectTag(dir string) error {
+	cmd := exec.Command("find", fmt.Sprintf("%s -name *.pb.go -type f ! -name *_http.pb.go -type f ! -name *_grpc.pb.go", dir))
+	var stdOut, stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
+	if debug {
+		fmt.Println(cmd.String())
+	}
+	err := cmd.Run()
+	outStr, errSter := stdOut.String(), stdErr.String()
+	if err != nil {
+		return err
+	}
+	fmt.Println("5555:", errSter)
+	cmd = exec.Command("protoc-go-inject-tag", "-input", outStr)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// wire
