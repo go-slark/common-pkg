@@ -110,7 +110,7 @@ func create(path, dir string) error {
 // inject-tag
 
 func injectTag(dir string) error {
-	cmd := exec.Command(fmt.Sprintf("find %s -name *.pb.go -type f ! -name *_http.pb.go -type f ! -name *_grpc.pb.go", dir))
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("find %s -name *.pb.go -type f ! -name *_http.pb.go -type f ! -name *_grpc.pb.go", dir))
 	var stdOut, stdErr bytes.Buffer
 	cmd.Stdout = &stdOut
 	cmd.Stderr = &stdErr
