@@ -22,7 +22,7 @@ var CreateCmd = &cobra.Command{
 			return
 		}
 
-		plugins := []string{"protoc-gen-go", "protoc-gen-go-grpc", "protoc-gen-gin", "protoc-gen-openapiv2", "protoc-gen-validate", "wire", "protoc-go-inject-tag"}
+		plugins := []string{"protoc-gen-go", "protoc-gen-go-grpc", "protoc-gen-gin", "protoc-gen-openapiv2", "protoc-gen-validate", "protoc-go-inject-tag"}
 		err := find(plugins...)
 		if err != nil {
 			cmd := exec.Command("hack", "install")
@@ -104,8 +104,6 @@ func create(path, dir string) error {
 	return fd.Run()
 }
 
-// inject-tag
-
 func injectTag(dir string) error {
 	cmd := exec.Command("bash", "-c", fmt.Sprintf("find %s -name *.pb.go -type f ! -name *_http.pb.go -type f ! -name *_grpc.pb.go", dir))
 	var stdOut, stdErr bytes.Buffer
@@ -115,24 +113,23 @@ func injectTag(dir string) error {
 		fmt.Println(cmd.String())
 	}
 	err := cmd.Run()
-	outStr, errStr := stdOut.String(), stdErr.String()
+	outStr, _ := stdOut.String(), stdErr.String()
 	if err != nil {
-		fmt.Println("out str:", outStr)
-		fmt.Println("err str:", errStr)
-		fmt.Println("find err:", err)
+		fmt.Printf("find file fail, err:%+v\n", err)
 		return err
 	}
-	fmt.Println("5555:", errStr)
-	fmt.Print("77777:", outStr)
 
 	for _, file := range strings.Split(outStr, "\n") {
 		if len(file) == 0 {
 			continue
 		}
-		fmt.Println("file:", file)
+
 		cmd = exec.Command("protoc-go-inject-tag", "-input", file)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		if debug {
+			fmt.Println(cmd.String())
+		}
 		err = cmd.Run()
 		if err != nil {
 			return err
@@ -140,5 +137,3 @@ func injectTag(dir string) error {
 	}
 	return nil
 }
-
-// wire
