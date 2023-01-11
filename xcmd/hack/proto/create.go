@@ -126,6 +126,7 @@ func injectTag(dir string) error {
 		return err
 	}
 	fmt.Println("5555:", errSter)
+	fmt.Print("77777:", outStr)
 	cmd = exec.Command("protoc-go-inject-tag", "-input", outStr)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
