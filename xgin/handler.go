@@ -112,6 +112,7 @@ func ProtoJson(out proto.Message, err error) gin.HandlerFunc {
 			rsp.Code = int(e.Status.Code)
 			rsp.Msg = e.Status.Message
 			_ = ctx.Error(e)
+			ctx.Abort()
 		}
 		ctx.JSON(http.StatusOK, rsp)
 	}
