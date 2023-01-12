@@ -22,7 +22,12 @@ var CreateCmd = &cobra.Command{
 			return
 		}
 
-		plugins := []string{"protoc-gen-go", "protoc-gen-go-grpc", "protoc-gen-gin", "protoc-gen-openapiv2", "protoc-gen-validate", "protoc-go-inject-tag"}
+		plugins := []string{
+			"protoc-gen-go", "protoc-gen-go-grpc",
+			"protoc-gen-gin", "protoc-gen-openapiv2",
+			"protoc-gen-validate", "protoc-go-inject-tag",
+			"wire", "statik",
+		}
 		err := find(plugins...)
 		if err != nil {
 			cmd := exec.Command("hack", "install")
