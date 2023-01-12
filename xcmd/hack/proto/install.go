@@ -20,7 +20,7 @@ var InstallCmd = &cobra.Command{
 			"github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest",
 			"github.com/smallfish-root/common-pkg/xcmd/protoc-gen-gin@latest",
 			"github.com/google/wire/cmd/wire@latest",
-			"go install github.com/rakyll/statik@latest",
+			"github.com/rakyll/statik@latest",
 		}
 		for _, plugin := range plugins {
 			fmt.Printf("go install %s\n", plugin)
