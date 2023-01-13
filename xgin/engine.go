@@ -1,6 +1,7 @@
 package xgin
 
 import (
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/smallfish-root/common-pkg/xerror"
 	"github.com/smallfish-root/common-pkg/xlogger"
@@ -12,6 +13,7 @@ type EngineParam struct {
 	Env          string
 	BaseUrl      string
 	AccessLog    bool
+	Pprof        bool
 	ExcludePaths []string
 	Routers      []func(r gin.IRouter)
 	HandlerFunc  []gin.HandlerFunc
@@ -37,6 +39,9 @@ func SetEngine(param EngineParam) *gin.Engine {
 	engine.Use(ErrLogger(param.Logger))
 	if param.AccessLog {
 		engine.Use(Logger(param.Logger, param.ExcludePaths...))
+	}
+	if param.Pprof {
+		pprof.Register(engine)
 	}
 	engine.Use(param.HandlerFunc...)
 	g := engine.Group(param.BaseUrl)
