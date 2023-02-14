@@ -201,12 +201,18 @@ func (c *connOption) handleHB() {
 	})
 
 	for {
-		ts := atomic.LoadInt64(&c.hbTime)
-		if time.Now().Unix()-ts > int64(c.hbInterval) {
-			c.Close()
-			break
+		select {
+		case <-c.closing:
+			return
+
+		default:
+			ts := atomic.LoadInt64(&c.hbTime)
+			if time.Now().Unix()-ts > int64(c.hbInterval) {
+				c.Close()
+				return
+			}
+			time.Sleep(2 * time.Second)
 		}
-		time.Sleep(2 * time.Second)
 	}
 }
 
