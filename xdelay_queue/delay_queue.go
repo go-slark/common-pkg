@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-redis/redis"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/smallfish-root/common-pkg/xredis"
 	"math/rand"
 	"time"
@@ -302,9 +303,12 @@ func (dq *DelayQueue) handleTicker(t time.Time, bucketName string) {
 		//if err != nil {
 		//}
 
-		_ = redis.NewScript(`
+		err = redis.NewScript(`
                redis.call("RPUSH", KEYS[1], ARGV[1])
                redis.call("ZREM", KEYS[2], ARGV[2])
            `).Run(dq.Client, []string{buildQueue(dq.QueueName, job.Topic), bucketName}, bucketZ.jobId, bucketZ.jobId).Err()
+		if err != nil {
+			logrus.Warnf("push job to queue fail, queue_name:%s, topic:%s, bucket_name:%s, err:%+v", dq.QueueName, job.Topic, bucketName, err)
+		}
 	}
 }
